@@ -1,0 +1,9 @@
+.env
+session.session
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+node_modules/

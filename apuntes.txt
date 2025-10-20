@@ -1,0 +1,75 @@
+
+url
+plataforma de publicacion
+fecha de publicacion red social
+nombre de usuario
+nombre completo
+cantidad de likes
+cantidad de comentarios
+tipo de contenido
+
+Tabla principal: enlaces_redes_sociales
+Campo	Tipo	Descripción
+id	SERIAL	Identificador único del registro
+url	TEXT	URL completa compartida
+plataforma	VARCHAR	Red social detectada (YouTube, TikTok, etc.)
+tipo_contenido	VARCHAR	Tipo de contenido (video, imagen, artículo, etc.)
+autor_contenido	VARCHAR	Autor del contenido en la red social
+fecha_publicacion	TIMESTAMP	Fecha de publicación en la red social
+likes	INT	Número de likes (si aplica)
+comentarios	INT	Número de comentarios (si aplica)
+compartidos	INT	Número de veces compartido (si aplica)
+visitas	INT	Número de visualizaciones (si aplica)
+
+CREATE TABLE enlaces_redes_sociales (
+    id SERIAL PRIMARY KEY,
+    url TEXT NOT NULL,
+    plataforma VARCHAR(50) NOT NULL,
+    tipo_contenido VARCHAR(50),
+    autor_contenido VARCHAR(100),
+    fecha_publicacion TIMESTAMP,
+    likes INT,
+    comentarios INT,
+    compartidos INT,
+    visitas INT
+);
+
+
+-- Tabla de plataformas (redes sociales)
+CREATE TABLE plataformas (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL
+);
+
+-- Tabla de tipos de contenido
+CREATE TABLE tipos_contenido (
+    id SERIAL PRIMARY KEY,
+    tipo VARCHAR(50) NOT NULL
+);
+
+-- Tabla de autores
+CREATE TABLE autores (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL
+);
+
+-- Tabla principal de enlaces
+CREATE TABLE enlaces_redes_sociales (
+    id SERIAL PRIMARY KEY,
+    url TEXT NOT NULL,
+    plataforma_id INT REFERENCES plataformas(id),
+    tipo_contenido_id INT REFERENCES tipos_contenido(id),
+    autor_id INT REFERENCES autores(id),
+    fecha_publicacion TIMESTAMP,
+    likes INT,
+    comentarios INT,
+    compartidos INT,
+    visitas INT
+);
+
+LinkedIn
+Dev.to	
+YouTube 
+Medium	
+Instagram	
+TikTok
