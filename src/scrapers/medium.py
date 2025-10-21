@@ -55,6 +55,17 @@ def scrap(url, config=None):
                     comentarios = post_responses.get('count')
                 break
 
+    # Si no se encontró la fecha, buscar en <script type="application/ld+json">
+    if not fecha_publicacion:
+        for script in soup.find_all('script', attrs={'type': 'application/ld+json'}):
+            try:
+                data = json.loads(script.string or script.get_text())
+                if isinstance(data, dict) and 'datePublished' in data:
+                    fecha_publicacion = data['datePublished']
+                    break
+            except Exception:
+                continue
+
     return {
         'autor_contenido': autor,
         'likes': likes,
