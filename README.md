@@ -43,7 +43,7 @@ Para obtener el ID de los grupos a los que perteneces, puedes usar el script inc
 1. Edita el archivo `extras/list_groups.py` y coloca tu API ID, API HASH y SESSION_NAME (igual que en tu `.env`).
 2. Ejecuta el script:
    ```powershell
-   python extras/list_groups.py
+   python tools/list_groups.py
    ```
 3. El script mostrará una lista con el nombre y el ID de cada grupo. Copia el ID que te interese y pégalo en la variable `GROUP_USERNAME` de tu `.env`.
 
