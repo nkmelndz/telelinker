@@ -1,6 +1,5 @@
 import re
-from telethon.sync import TelegramClient
-from telethon import utils as tg_utils
+from src.services.telegram_service import TelegramService
 from src.scrapers import SCRAPERS
 from src.config import get_config
 from src.db import DB
@@ -26,11 +25,9 @@ def pick_scraper(url: str):
 def run():
     cfg = get_config()
     db = DB(cfg)
-    client = TelegramClient(cfg.SESSION_NAME, cfg.API_ID, cfg.API_HASH)
-    client.start()
+    tg_service = TelegramService(cfg.SESSION_NAME, cfg.API_ID, cfg.API_HASH)
 
-    # Usar directamente el valor de GROUP_USERNAME procesado en config.py
-    for msg in client.iter_messages(cfg.GROUP_USERNAME):
+    for msg in tg_service.iter_group_messages(cfg.GROUP_USERNAME):
         if not msg.message:
             continue
         urls = re.findall(r'(https?://[^\s]+)', msg.message)
@@ -46,7 +43,7 @@ def run():
                 db.insert_enlace(datos)
                 print(f"\nEnlace insertado: {datos['url']} ({datos['plataforma']})")
     
-    client.disconnect()
+    tg_service.disconnect()
 
 
 if __name__ == '__main__':
