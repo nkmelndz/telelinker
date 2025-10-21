@@ -12,6 +12,7 @@ RUN apt-get update && \
         libpq-dev \
         chromium \
         chromium-driver \
+        ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependencias de Python
