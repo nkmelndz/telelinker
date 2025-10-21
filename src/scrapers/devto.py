@@ -6,7 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-from utils import _parse_count
+from src.utils import _parse_count
 
 def scrap(url, config=None):
     headers = {

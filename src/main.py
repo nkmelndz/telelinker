@@ -1,5 +1,6 @@
 import re
 from telethon.sync import TelegramClient
+from telethon import utils as tg_utils
 from src.scrapers import SCRAPERS
 from src.config import get_config
 from src.db import DB
@@ -23,12 +24,12 @@ def pick_scraper(url: str):
     return None, None
 
 def run():
-
     cfg = get_config()
     db = DB(cfg)
     client = TelegramClient(cfg.SESSION_NAME, cfg.API_ID, cfg.API_HASH)
     client.start()
 
+    # Usar directamente el valor de GROUP_USERNAME procesado en config.py
     for msg in client.iter_messages(cfg.GROUP_USERNAME):
         if not msg.message:
             continue

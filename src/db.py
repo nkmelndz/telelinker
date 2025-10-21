@@ -16,7 +16,7 @@ class DB:
         try:
             cur = conn.cursor()
             cur.execute('''
-                INSERT INTO enlaces (url, plataforma, tipo_contenido, autor_contenido, fecha_publicacion, likes, comentarios, compartidos, visitas)
+                INSERT INTO enlaces_redes_sociales (url, plataforma, tipo_contenido, autor_contenido, fecha_publicacion, likes, comentarios, compartidos, visitas)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''', (
                 datos.get('url'),
