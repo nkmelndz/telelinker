@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import re
-from src.utils import _parse_count 
+from src.utils.parse_count import _parse_count 
 
 def scrap(url, config=None):
     headers = {

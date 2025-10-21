@@ -44,6 +44,7 @@ def run():
             # validar campos obligatorios antes de persistir
             if all(datos.get(k) is not None for k in ('autor_contenido','likes','comentarios','fecha_publicacion')):
                 db.insert_enlace(datos)
+                print(f"\nEnlace insertado: {datos['url']} ({datos['plataforma']})")
     
     client.disconnect()
 
