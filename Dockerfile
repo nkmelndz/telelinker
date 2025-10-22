@@ -25,5 +25,6 @@ COPY . /app
 ENV CHROME_BIN=/usr/bin/chromium
 ENV PATH="/usr/bin/:${PATH}"
 
+ENV PYTHONPATH=/app/src
 # Ejecutar el módulo principal bajo src
-CMD ["python", "-m", "src.main"]
+ENTRYPOINT ["python", "-m", "src.main"]

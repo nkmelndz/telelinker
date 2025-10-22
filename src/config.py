@@ -22,10 +22,10 @@ class Config:
         self.SESSION_NAME = os.getenv('SESSION_NAME', 'session')
         g = os.getenv('GROUP_USERNAME')
         self.GROUP_USERNAME = int(g) 
-        self.DB_HOST = os.getenv('DB_HOST')
-        self.DB_NAME = os.getenv('DB_NAME')
-        self.DB_USER = os.getenv('DB_USER')
-        self.DB_PASSWORD = os.getenv('DB_PASSWORD')
+        # self.DB_HOST = os.getenv('DB_HOST')
+        # self.DB_NAME = os.getenv('DB_NAME')
+        # self.DB_USER = os.getenv('DB_USER')
+        # self.DB_PASSWORD = os.getenv('DB_PASSWORD')
 
     def validate(self):
         missing = []
