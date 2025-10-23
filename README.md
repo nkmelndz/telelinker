@@ -1,3 +1,84 @@
+# Instalación con Scoop (Windows)
+
+Puedes instalar Telelinker fácilmente usando Scoop:
+
+1. Añade el bucket:
+   ```powershell
+   scoop bucket add telelinker https://github.com/nkmelndz/telelinker
+   ```
+2. Instala la app:
+   ```powershell
+   scoop install telelinker
+   ```
+3. Para actualizar:
+   ```powershell
+   scoop update telelinker
+   ```
+# Comandos de configuración
+
+Antes de usar los comandos de extracción, debes configurar tu sesión de Telegram:
+
+### Inicializar configuración
+Solicita tu API ID y API HASH y guarda el archivo de configuración:
+```powershell
+telelinker setup
+```
+
+### Iniciar sesión en Telegram
+Autentica tu cuenta y crea el archivo de sesión:
+```powershell
+telelinker login
+```
+# Uso
+
+Telelinker es una herramienta CLI para extraer enlaces y metadatos de grupos de Telegram.
+
+## Comandos principales
+
+### Listar grupos
+Muestra los grupos y subgrupos a los que perteneces:
+```powershell
+telelinker groups --format csv --out grupos.csv
+```
+
+### Fetch de enlaces
+Extrae enlaces y metadatos de un grupo específico:
+```powershell
+telelinker fetch --group <ID_GRUPO> --limit 10 --format csv --out posts.csv
+```
+
+O desde un archivo de grupos:
+```powershell
+telelinker fetch --groups-file grupos.txt --format postgresql --out posts.sql
+```
+
+## Argumentos principales
+
+| Argumento      | Descripción                                      |
+|--------------- |--------------------------------------------------|
+| --group        | ID o username del grupo a procesar                |
+| --groups-file  | Archivo con IDs o usernames de grupos             |
+| --limit        | Número máximo de enlaces a exportar               |
+| --format       | Formato de exportación (`csv`, `postgresql`)      |
+| --out          | Ruta del archivo de salida                        |
+
+## Ejemplos
+
+Exportar 20 enlaces de un grupo en CSV:
+```powershell
+telelinker fetch --group -1001234567890 --limit 20 --format csv
+```
+
+Exportar todos los enlaces de varios grupos en SQL:
+```powershell
+telelinker fetch --groups-file grupos.txt --format postgresql
+```
+
+Listar todos los grupos en JSON:
+```powershell
+telelinker groups --format json --out grupos.json
+```
+
 # telegram-links-app
 
 Extrae enlaces compartidos en grupos de Telegram, detecta la red social, obtiene metadatos y los guarda en PostgreSQL.
