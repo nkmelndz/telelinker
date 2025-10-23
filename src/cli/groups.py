@@ -5,19 +5,19 @@ from src.services.telegram_service import TelegramService
 
 def run(args):
     
-    # Leer configuración guardada igual que login.py
+    # Read config
     if not os.path.exists("config.json"):
-        print("❌ Configuración no encontrada. Ejecuta primero 'telelinker setup'.")
+        print("❌ Config file not found. Run 'telelinker setup' first.")
         return
     with open("config.json", "r") as f:
         cfg = json.load(f)
     api_id = cfg["API_ID"]
     api_hash = cfg["API_HASH"]
     session_name = cfg["SESSION_NAME"]
-    
+
     session_file = f"{session_name}.session"
     if not os.path.exists(session_file):
-        print(f"❌ Sesión no encontrada. Ejecuta primero 'telelinker login' para autenticarte.")
+        print(f"❌ Session not found. Run 'telelinker login' to authenticate.")
         return
     
     client = TelegramService(session_name, api_id, api_hash)
@@ -39,14 +39,14 @@ def run(args):
             with open(export_file, "w", encoding="utf-8") as f:
                 for grupo in grupos:
                     f.write(f"{grupo['id']},{grupo['name']}\n")
-        print(f"📋 Exportados {len(grupos)} grupos a {export_file} en formato {export_format}")
+        print(f"📋 Exported {len(grupos)} groups to {export_file} as {export_format}")
     else:
         for dialog in client.iter_user_dialogs():
             if dialog.is_group:
                 grupos.append({"id": dialog.id, "name": dialog.name})
         client.disconnect()
-        print("Grupos y subgrupos donde eres miembro:")
-        print("{:<20} {:<40}".format("ID", "Nombre"))
+        print("Groups and subgroups you are a member of:")
+        print("{:<20} {:<40}".format("ID", "Name"))
         print("-"*60)
         for grupo in grupos:
             print("{:<20} {:<40}".format(str(grupo["id"]), grupo["name"]))
