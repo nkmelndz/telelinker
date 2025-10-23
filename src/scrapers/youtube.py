@@ -1,3 +1,5 @@
+from src.utils.normalize_date import normalize_date
+
 def scrap(url, config=None):
     import yt_dlp
     import contextlib, os, sys
@@ -20,7 +22,7 @@ def scrap(url, config=None):
             'comentarios': comentarios,
             'compartidos': None,
             'visitas': visitas,
-            'fecha_publicacion': fecha_publicacion,
+            'fecha_publicacion': normalize_date(fecha_publicacion),
             'tipo_contenido': 'video',
         }
     except Exception:

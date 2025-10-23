@@ -1,3 +1,4 @@
+from src.utils.normalize_date import normalize_date
 import re
 import json
 import requests
@@ -72,6 +73,6 @@ def scrap(url, config=None):
         'comentarios': comentarios,
         'compartidos': None,
         'visitas': None,
-        'fecha_publicacion': fecha_publicacion,
+        'fecha_publicacion': normalize_date(fecha_publicacion),
         'tipo_contenido': 'artículo',
     }

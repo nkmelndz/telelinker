@@ -61,7 +61,11 @@ def run(args):
     else:
         groups = [args.group]
 
-    tg_service = TelegramService(session_file, api_id, api_hash)
+    try:
+        tg_service = TelegramService(session_file, api_id, api_hash)
+    except SilentException:
+        print("⚠️  Error temporal de sesión de Telegram. Intenta reiniciar sesión si el problema persiste.")
+        return
 
     out_file = getattr(args, "out", None)
     if not out_file:

@@ -116,22 +116,6 @@ Sigue estos pasos para obtenerlos:
    docker run -it --env-file .env telegram-links-app
    ```
 
-
-## ¿Cómo saber el ID de tu grupo de Telegram?
-
-Para obtener el ID de los grupos a los que perteneces, puedes usar el script incluido:
-
-1. Edita el archivo `extras/list_groups.py` y coloca tu API ID, API HASH y SESSION_NAME (igual que en tu `.env`).
-2. Ejecuta el script:
-   ```powershell
-   python tools/list_groups.py
-   ```
-3. El script mostrará una lista con el nombre y el ID de cada grupo. Copia el ID que te interese y pégalo en la variable `GROUP_USERNAME` de tu `.env`.
-
-> Puedes usar tanto el ID numérico como el username público del grupo (si tiene uno).
-
-Ver `.env.example` para la lista completa de variables requeridas.
-
 ## Estructura de la base de datos
 Ver `apuntes.txt` para el esquema SQL sugerido.
 

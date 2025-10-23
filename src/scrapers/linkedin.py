@@ -2,7 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import re
-from src.utils.parse_count import _parse_count 
+from src.utils.parse_count import _parse_count
+from src.utils.normalize_date import normalize_date
 
 def scrap(url, config=None):
     headers = {
@@ -64,6 +65,7 @@ def scrap(url, config=None):
             return False
         if find_date(data):
             break
+    fecha_publicacion = normalize_date(fecha_publicacion)
     return {
         'autor_contenido': autor_contenido,
         'likes': likes,

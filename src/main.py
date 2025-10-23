@@ -1,9 +1,6 @@
 import re
 from src.services.telegram_service import TelegramService
 from src.scrapers import SCRAPERS
-from src.config import get_config
-from src.db import DB
-
 import argparse
 
 def main():
@@ -15,6 +12,9 @@ def main():
 
     # login
     subparsers.add_parser("login")
+
+    # logout
+    subparsers.add_parser("logout")
 
     # groups
     groups_parser = subparsers.add_parser("groups")
@@ -38,6 +38,9 @@ def main():
     elif args.command == "login":
         from src.cli import login
         login.run(args)
+    elif args.command == "logout":
+        from src.cli import logout
+        logout.run(args)
     elif args.command == "groups":
         from src.cli import groups
         groups.run(args)

@@ -1,3 +1,4 @@
+from src.utils.normalize_date import normalize_date
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -98,6 +99,7 @@ def scrap(url, config=None):
             comentarios = _parse_count(raw)
     if likes is None:
         try:
+            import platform
             chrome_options = Options()
             chrome_options.add_argument('--headless')
             chrome_options.add_argument('--no-sandbox')
@@ -105,7 +107,9 @@ def scrap(url, config=None):
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument('--window-size=1920,1080')
             chrome_options.add_argument('--user-agent=' + headers['User-Agent'])
-            chrome_options.binary_location = "/usr/bin/chromium"
+            if platform.system() != "Windows":
+                chrome_options.binary_location = "/usr/bin/chromium"
+            # En Windows, no se establece binary_location, Selenium detecta chrome.exe automáticamente
             driver = webdriver.Chrome(options=chrome_options)
             driver.get(url)
             elem = driver.find_element(By.ID, 'reaction_total_count')
@@ -124,6 +128,6 @@ def scrap(url, config=None):
         'comentarios': comentarios,
         'compartidos': None,
         'visitas': visitas,
-        'fecha_publicacion': fecha_publicacion,
+        'fecha_publicacion': normalize_date(fecha_publicacion),
         'tipo_contenido': 'artículo',
     }
