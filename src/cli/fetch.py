@@ -63,11 +63,12 @@ def run(args):
 
     tg_service = TelegramService(session_file, api_id, api_hash)
 
-    exports_dir = os.path.join(config_dir, "exports")
-    os.makedirs(exports_dir, exist_ok=True)
     out_file = getattr(args, "out", None)
     if not out_file:
-        out_file = os.path.join(exports_dir, "posts.csv" if formato=="csv" else "posts.sql")
+        out_file = os.path.abspath("posts.csv" if formato=="csv" else "posts.sql")
+    else:
+        if not os.path.isabs(out_file):
+            out_file = os.path.abspath(out_file)
     fieldnames = [
         "url",
         "platform",

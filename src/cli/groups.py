@@ -29,12 +29,13 @@ def run(args):
     grupos = []
     
 
-    exports_dir = os.path.join(config_dir, "exports")
-    os.makedirs(exports_dir, exist_ok=True)
     export_file = getattr(args, "out", None)
-    if not export_file:
-        export_file = os.path.join(exports_dir, "groups.csv" if export_format=="csv" else "groups.json")
     export_format = getattr(args, "format", "csv")
+    if not export_file:
+        export_file = os.path.abspath("groups.csv" if export_format=="csv" else "groups.json")
+    else:
+        if not os.path.isabs(export_file):
+            export_file = os.path.abspath(export_file)
     if export_file:
         for dialog in client.iter_user_dialogs():
             if dialog.is_group:
