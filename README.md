@@ -25,13 +25,12 @@ telelinker setup
 ```
 
 ### Iniciar sesión en Telegram
+
 Autentica tu cuenta y crea el archivo de sesión:
 ```powershell
 telelinker login
 ```
 # Uso
-
-Telelinker es una herramienta CLI para extraer enlaces y metadatos de grupos de Telegram.
 
 ## Comandos principales
 

@@ -30,6 +30,12 @@ def main():
     fetch_parser.add_argument("--limit", type=str, required=False, help="Numero máximo de posts a fetch")
     fetch_parser.add_argument("--out", type=str, required=False, help="Archivo de salida")
 
+    # scrape_instagram
+    insta_parser = subparsers.add_parser("scrape_instagram")
+    insta_parser.add_argument("--group", type=str, required=True, help="ID o username del grupo de Telegram")
+    insta_parser.add_argument("--out", type=str, required=True, help="Archivo CSV de salida")
+    insta_parser.add_argument("--limit", type=int, required=False, help="Número máximo de mensajes a analizar")
+
     args = parser.parse_args()
 
     if args.command == "setup":
@@ -44,6 +50,9 @@ def main():
     elif args.command == "fetch":
         from src.cli import fetch
         fetch.run(args)
+    elif args.command == "scrape_instagram":
+        from src.cli import scrape_instagram
+        scrape_instagram.run(args)
     else:
         parser.print_help()
 
