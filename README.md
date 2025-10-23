@@ -1,125 +1,237 @@
-# Instalación con Scoop (Windows)
+# Telelinker
 
-Puedes instalar Telelinker fácilmente usando Scoop:
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
 
-1. Añade el bucket:
-   ```powershell
-   scoop bucket add telelinker https://github.com/nkmelndz/telelinker
-   ```
-2. Instala la app:
-   ```powershell
-   scoop install telelinker
-   ```
-3. Para actualizar:
-   ```powershell
-   scoop update telelinker
-   ```
-# Comandos de configuración
+**Telelinker** es una herramienta de línea de comandos que extrae y analiza enlaces compartidos en grupos de Telegram. Detecta automáticamente el tipo de contenido (Instagram, LinkedIn, YouTube, TikTok, etc.), obtiene metadatos relevantes y exporta toda la información en diferentes formatos para análisis posterior.
 
-Antes de usar los comandos de extracción, debes configurar tu sesión de Telegram:
+## 🚀 ¿Qué hace Telelinker?
 
-### Inicializar configuración
-Solicita tu API ID y API HASH y guarda el archivo de configuración:
+Telelinker te permite:
+
+- **📱 Extraer enlaces** de grupos de Telegram de forma automatizada
+- **🔍 Detectar plataformas** automáticamente (Instagram, LinkedIn, YouTube, TikTok, Medium, Dev.to)
+- **📊 Obtener metadatos** como títulos, descripciones, fechas, contadores de interacción
+- **💾 Exportar datos** en múltiples formatos (CSV, PostgreSQL)
+- **⚡ Procesar múltiples grupos** de forma eficiente
+
+### Casos de uso típicos:
+
+- **Análisis de contenido**: Estudiar qué tipo de enlaces se comparten más en comunidades
+- **Investigación social**: Analizar tendencias y patrones de compartición
+- **Gestión de comunidades**: Monitorear el contenido compartido en grupos
+- **Data mining**: Recopilar datos para análisis de redes sociales
+
+## 📦 Instalación
+
+### Opción 1: Scoop (Windows - Recomendado)
+
 ```powershell
-telelinker setup
+# Añadir el bucket
+scoop bucket add telelinker https://github.com/nkmelndz/telelinker
+
+# Instalar
+scoop install telelinker
+
+# Actualizar
+scoop update telelinker
 ```
 
-### Iniciar sesión en Telegram
-Autentica tu cuenta y crea el archivo de sesión:
+### Opción 2: Desde el código fuente
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/nkmelndz/telelinker.git
+cd telelinker
+
+# Crear entorno virtual
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+
+# Instalar dependencias
+pip install -r requirements.txt
+```
+
+### Opción 3: Docker
+
+```bash
+# Construir la imagen
+docker build -t telelinker .
+
+# Ejecutar
+docker run -it --env-file .env telelinker
+```
+
+## ⚙️ Configuración inicial
+
+Antes de usar Telelinker, necesitas configurar tu acceso a la API de Telegram:
+
+### 1. Obtener credenciales de Telegram
+
+1. Ve a https://my.telegram.org
+2. Inicia sesión con tu número de teléfono
+3. Haz clic en "API development tools"
+4. Completa el formulario para crear una aplicación
+5. Guarda tu **API ID** y **API HASH**
+
+### 2. Configurar Telelinker
+
 ```powershell
+# Configurar credenciales
+telelinker setup
+
+# Iniciar sesión en Telegram
 telelinker login
 ```
-# Uso
 
-Telelinker es una herramienta CLI para extraer enlaces y metadatos de grupos de Telegram.
+## 🎯 Cómo usar Telelinker
 
-## Comandos principales
+### Comandos básicos
 
-### Listar grupos
-Muestra los grupos y subgrupos a los que perteneces:
+#### 1. Listar tus grupos disponibles
+
 ```powershell
-telelinker groups --format csv --out grupos.csv
+# Ver grupos en consola
+telelinker groups
+
+# Exportar a CSV
+telelinker groups --format csv --out mis_grupos.csv
+
+# Exportar a JSON
+telelinker groups --format json --out mis_grupos.json
 ```
 
-### Fetch de enlaces
-Extrae enlaces y metadatos de un grupo específico:
+#### 2. Extraer enlaces de un grupo específico
+
 ```powershell
-telelinker fetch --group <ID_GRUPO> --limit 10 --format csv --out posts.csv
+# Extraer últimos 50 enlaces
+telelinker fetch --group -1001234567890 --limit 50 --format csv --out enlaces.csv
+
+# Usar username del grupo
+telelinker fetch --group @mi_grupo --limit 100 --format csv --out datos.csv
 ```
 
-O desde un archivo de grupos:
+#### 3. Procesar múltiples grupos
+
 ```powershell
-telelinker fetch --groups-file grupos.txt --format postgresql --out posts.sql
+# Crear archivo con IDs de grupos (uno por línea)
+echo "-1001234567890" > grupos.txt
+echo "@otro_grupo" >> grupos.txt
+
+# Procesar todos los grupos
+telelinker fetch --groups-file grupos.txt --format postgresql --out datos.sql
 ```
 
-## Argumentos principales
+### Parámetros disponibles
 
-| Argumento      | Descripción                                      |
-|--------------- |--------------------------------------------------|
-| --group        | ID o username del grupo a procesar                |
-| --groups-file  | Archivo con IDs o usernames de grupos             |
-| --limit        | Número máximo de enlaces a exportar               |
-| --format       | Formato de exportación (`csv`, `postgresql`)      |
-| --out          | Ruta del archivo de salida                        |
+| Parámetro | Descripción | Ejemplo |
+|-----------|-------------|---------|
+| `--group` | ID o username del grupo | `-1001234567890` o `@migrupo` |
+| `--groups-file` | Archivo con lista de grupos | `grupos.txt` |
+| `--limit` | Máximo número de enlaces | `100` |
+| `--format` | Formato de salida | `csv`, `postgresql` |
+| `--out` | Archivo de salida | `datos.csv` |
 
-## Ejemplos
+### Ejemplos prácticos
 
-Exportar 20 enlaces de un grupo en CSV:
 ```powershell
-telelinker fetch --group -1001234567890 --limit 20 --format csv
+# Análisis rápido de un grupo
+telelinker fetch --group @tecnologia --limit 20 --format csv
+
+# Exportar datos para base de datos
+telelinker fetch --group -1001234567890 --format postgresql --out insertar_datos.sql
+
+# Procesar múltiples grupos con límite
+telelinker fetch --groups-file comunidades.txt --limit 500 --format csv --out analisis_completo.csv
 ```
 
-Exportar todos los enlaces de varios grupos en SQL:
-```powershell
-telelinker fetch --groups-file grupos.txt --format postgresql
+## 🛠️ Plataformas soportadas
+
+Telelinker detecta y extrae metadatos de:
+
+- **📸 Instagram**: Posts, reels, stories
+- **💼 LinkedIn**: Posts, artículos
+- **🎥 YouTube**: Videos, shorts
+- **🎵 TikTok**: Videos
+- **📝 Medium**: Artículos
+- **👨‍💻 Dev.to**: Posts técnicos
+
+## 📋 Requisitos del sistema
+
+- **Python 3.11+**
+- **Conexión a internet** (para acceder a APIs)
+- **Cuenta de Telegram** con acceso a los grupos que quieres analizar
+- **Credenciales de API de Telegram** (API ID y API HASH)
+
+### Dependencias opcionales:
+- **Docker** (para ejecución en contenedor)
+- **PostgreSQL** (si usas formato de exportación SQL)
+
+## 🤝 Contribuir al proyecto
+
+¡Telelinker es un proyecto open source y las contribuciones son muy bienvenidas!
+
+### ¿Cómo puedes ayudar?
+
+- 🐛 **Reportar bugs** - Encuentra errores y ayúdanos a mejorar
+- 💡 **Sugerir funcionalidades** - Propón nuevas características
+- 🔧 **Agregar plataformas** - Implementa soporte para nuevas redes sociales
+- 📝 **Mejorar documentación** - Ayuda a otros usuarios
+- ✨ **Optimizar código** - Mejora el rendimiento y la calidad
+
+### Primeros pasos para contribuir
+
+1. **Lee la guía**: Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para instrucciones detalladas
+2. **Revisa el código de conducta**: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+3. **Explora issues**: Busca [issues abiertos](../../issues) para empezar
+4. **Haz fork del repo**: Crea tu propia copia para trabajar
+5. **Envía un PR**: Comparte tus mejoras con la comunidad
+
+### Desarrollo local
+
+```bash
+# Fork y clona el repositorio
+git clone https://github.com/tu-usuario/telelinker.git
+cd telelinker
+
+# Configura el entorno
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# Crea una rama para tu feature
+git checkout -b feature/mi-nueva-funcionalidad
+
+# ¡Empieza a programar! 🚀
 ```
 
-Listar todos los grupos en JSON:
-```powershell
-telelinker groups --format json --out grupos.json
-```
+## 📄 Licencia
 
-# telegram-links-app
+Este proyecto está licenciado bajo la **Licencia MIT**. Esto significa que puedes:
 
-Extrae enlaces compartidos en grupos de Telegram, detecta la red social, obtiene metadatos y los guarda en PostgreSQL.
+- ✅ Usar el código comercialmente
+- ✅ Modificar el código
+- ✅ Distribuir el código
+- ✅ Usar el código privadamente
 
-## Requisitos
-- Python 3.11+
-- Docker (opcional, recomendado para producción)
-- Acceso a la API de Telegram (api_id, api_hash)
-- Base de datos PostgreSQL
+Ver [LICENSE](LICENSE) para más detalles.
 
+## 🆘 Soporte y ayuda
 
-## Cómo obtener tu API ID y API HASH de Telegram
+¿Necesitas ayuda? Aquí tienes varias opciones:
 
-Para usar la API de Telegram necesitas dos credenciales:
+- 📋 **Issues**: [Reportar bugs o solicitar features](../../issues)
+- 💬 **Discusiones**: [Preguntas generales y ayuda](../../discussions)
+- 📖 **Documentación**: [Guía completa de contribución](CONTRIBUTING.md)
 
-- **API ID**
-- **API HASH**
+## ⚠️ Consideraciones importantes
 
-Sigue estos pasos para obtenerlos:
+- **Privacidad**: Solo puedes extraer enlaces de grupos donde eres miembro
+- **Rate limiting**: Respeta los límites de la API de Telegram
+- **Términos de servicio**: Asegúrate de cumplir con los ToS de las plataformas
+- **Datos sensibles**: Nunca compartas tu API HASH públicamente
 
-1. Ve a https://my.telegram.org y accede con tu número de teléfono de Telegram.
-2. Haz clic en "API development tools".
-3. Llena el formulario (nombre de la app, URL, etc.).
-4. Al enviar, verás tu **API ID** y **API HASH**. Guárdalos y colócalos en tu archivo `.env`.
+---
 
-> **Nota:** Nunca compartas tu API HASH ni lo subas a repositorios públicos.
-
-## Uso con Docker
-1. Construye la imagen:
-   ```powershell
-   docker build -t telegram-links-app .
-   ```
-2. Ejecuta el contenedor pasando tu `.env`:
-   ```powershell
-   docker run -it --env-file .env telegram-links-app
-   ```
-
-## Estructura de la base de datos
-Ver `apuntes.txt` para el esquema SQL sugerido.
-
-## Notas
-- El archivo `.env` está en `.gitignore` y no debe subirse al repositorio.
-- Si usas Docker, asegúrate de que tu base de datos sea accesible desde el contenedor.
-- Si usas Selenium/Chromium, la imagen Docker ya incluye los binarios necesarios.
+**¿Te gusta Telelinker?** ⭐ ¡Dale una estrella al repositorio y compártelo con otros desarrolladores!
