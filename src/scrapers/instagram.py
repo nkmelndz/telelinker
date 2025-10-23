@@ -65,5 +65,3 @@ def scrap(url, config=None):
         'fecha_publicacion': normalize_date(fecha_publicacion),
         'tipo_contenido': 'foto/video',
     }
-        
-print(scrap("https://www.instagram.com/p/DPUygWQjP5v/"))
