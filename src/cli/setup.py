@@ -4,5 +4,5 @@ def run(args):
     # Guardar configuración (ejemplo simple)
     with open("config.json", "w") as f:
         import json
-        json.dump({"API_ID": api_id, "API_HASH": api_hash}, f)
+        json.dump({"API_ID": api_id, "API_HASH": api_hash, "SESSION_NAME": "telelinker"}, f)
     print("✅ Configuration saved!")

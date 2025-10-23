@@ -35,17 +35,17 @@ def run(args):
 
     # Leer configuración guardada igual que login.py
     if not os.path.exists("config.json"):
-        print("❌ Configuración no encontrada. Ejecuta primero 'social-scraper setup'.")
+        print("❌ Configuración no encontrada. Ejecuta primero 'telelinker setup'.")
         return
     with open("config.json", "r") as f:
         cfg = json.load(f)
     api_id = cfg["API_ID"]
     api_hash = cfg["API_HASH"]
-    session_name = cfg.get("SESSION_NAME", "telelinker")
+    session_name = cfg["SESSION_NAME"]
 
     session_file = f"{session_name}.session"
     if not os.path.exists(session_file):
-        print(f"❌ Sesión no encontrada. Ejecuta primero 'social-scraper login' para autenticarte.")
+        print(f"❌ Sesión no encontrada. Ejecuta primero 'telelinker login' para autenticarte.")
         return
 
     tg_service = TelegramService(session_name, api_id, api_hash)
