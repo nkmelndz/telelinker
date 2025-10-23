@@ -11,3 +11,4 @@ config.json
 *.session
 build/
 dist/
+*.spec
