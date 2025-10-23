@@ -51,6 +51,14 @@ O desde un archivo de grupos:
 telelinker fetch --groups-file grupos.txt --format postgresql --out posts.sql
 ```
 
+### Scrape de publicaciones públicas de Instagram
+Busca en los mensajes de un grupo los links de publicaciones públicas de Instagram, extrae metadatos (autor, fecha, likes, comentarios, caption, etc.) y los guarda en un archivo CSV:
+```powershell
+telelinker scrape_instagram --group <ID_GRUPO> --out posts_instagram.csv --limit 100
+```
+- El archivo CSV contendrá los datos extraídos de cada publicación encontrada.
+- Requiere tener configurada la sesión de Telegram y conexión a internet.
+
 ## Argumentos principales
 
 | Argumento      | Descripción                                      |
