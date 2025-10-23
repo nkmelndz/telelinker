@@ -28,19 +28,21 @@ def pick_scraper(url: str):
 
 def run(args):
     
-    # Read config
-    if not os.path.exists("config.json"):
-        print("❌ Config file not found. Run 'telelinker setup' first.")
+    # Leer configuración desde la carpeta del usuario
+    config_dir = os.path.join(os.path.expanduser("~"), ".telelinker")
+    config_path = os.path.join(config_dir, "config.json")
+    if not os.path.exists(config_path):
+        print(f"❌ Config file not found. Run 'telelinker setup' first. Esperado en: {config_path}")
         return
-    with open("config.json", "r") as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         cfg = json.load(f)
     api_id = cfg["API_ID"]
     api_hash = cfg["API_HASH"]
     session_name = cfg["SESSION_NAME"]
 
-    session_file = f"{session_name}.session"
+    session_file = os.path.join(config_dir, f"{session_name}.session")
     if not os.path.exists(session_file):
-        print(f"❌ Session not found. Run 'telelinker login' to authenticate.")
+        print(f"❌ Session not found. Run 'telelinker login' to authenticate. Esperado en: {session_file}")
         return
     
     limit = getattr(args, "limit", None)
@@ -59,13 +61,29 @@ def run(args):
     else:
         groups = [args.group]
 
-    tg_service = TelegramService(session_name, api_id, api_hash)
+    tg_service = TelegramService(session_file, api_id, api_hash)
 
-    out_file = getattr(args, "out", None) or ("posts.csv" if formato=="csv" else "posts.sql")
-    fieldnames = ["group_id","autor_contenido","likes","comentarios","compartidos","visitas","fecha_publicacion","tipo_contenido"]
+    exports_dir = os.path.join(config_dir, "exports")
+    os.makedirs(exports_dir, exist_ok=True)
+    out_file = getattr(args, "out", None)
+    if not out_file:
+        out_file = os.path.join(exports_dir, "posts.csv" if formato=="csv" else "posts.sql")
+    fieldnames = [
+        "url",
+        "platform",
+        "content_type",
+        "author",
+        "date",
+        "likes",
+        "comments",
+        "shared",
+        "visit"
+    ]
     total_posts = 0
+    enlace_count = 0
+
     if formato == "csv":
-        with open(out_file, "w", newline="") as f:
+        with open(out_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             for group in groups:
@@ -73,13 +91,13 @@ def run(args):
                     print(f"📡 Fetching up to {limit} posts from group {group}...")
                 else:
                     print(f"📡 Fetching all posts from group {group}...")
-                for i, msg in enumerate(tg_service.iter_group_messages(int(group))):
-                    if limit is not None and i >= int(limit):
-                        break
+                for msg in tg_service.iter_group_messages(int(group)):
                     if not msg.message:
                         continue
                     urls = re.findall(r'(https?://[^\s]+)', msg.message)
                     for url in urls:
+                        if limit is not None and enlace_count >= int(limit):
+                            break
                         plataforma, fn = pick_scraper(url)
                         if not fn:
                             continue
@@ -88,20 +106,22 @@ def run(args):
                         datos['plataforma'] = plataforma
                         if all(datos.get(k) is not None for k in ('autor_contenido','likes','comentarios','fecha_publicacion')):
                             row = {
-                                'autor_contenido': datos['autor_contenido'],
-                                'likes': datos['likes'],
-                                'comentarios': datos['comentarios'],
-                                'compartidos': datos.get('compartidos', None),
-                                'visitas': datos.get('visitas', None),
-                                'fecha_publicacion': datos['fecha_publicacion'],
-                                'tipo_contenido': datos.get('tipo_contenido', None),
-                                'group_id': group
+                                'url': datos.get('url'),
+                                'platform': datos.get('plataforma'),
+                                'content_type': datos.get('tipo_contenido'),
+                                'author': datos.get('autor_contenido'),
+                                'date': datos.get('fecha_publicacion'),
+                                'likes': datos.get('likes'),
+                                'comments': datos.get('comentarios'),
+                                'shared': datos.get('compartidos', None),
+                                'visit': datos.get('visitas', None)
                             }
                             writer.writerow(row)
                             total_posts += 1
-                            print(f"\nLink inserted: {datos['url']} ({datos['plataforma']})")
+                            enlace_count += 1
+                            print(f"\r[{'=' * (total_posts % 10)}{' ' * (10 - (total_posts % 10))}] Insertando... {total_posts}", end='')
         tg_service.disconnect()
-        print(f"✅ Export complete: {total_posts} posts saved to {out_file}")
+        print(f"\n✅ Export complete: {total_posts} posts saved to {out_file}")
     elif formato == "postgresql":
         create_table_stmt = (
             "CREATE TABLE posts (\n"
@@ -127,13 +147,14 @@ def run(args):
                     print(f"📡 Fetching up to {limit} posts from group {group}...")
                 else:
                     print(f"📡 Fetching all posts from group {group}...")
-                for i, msg in enumerate(tg_service.iter_group_messages(int(group))):
-                    if limit is not None and i >= int(limit):
-                        break
+                enlace_count = 0
+                for msg in tg_service.iter_group_messages(int(group)):
                     if not msg.message:
                         continue
                     urls = re.findall(r'(https?://[^\s]+)', msg.message)
                     for url in urls:
+                        if limit is not None and enlace_count >= int(limit):
+                            break
                         plataforma, fn = pick_scraper(url)
                         if not fn:
                             continue
@@ -162,9 +183,10 @@ def run(args):
                             ]
                             f.write(f"INSERT INTO {table_name} (url, platform, content_type, author, date, likes, comments, shared, visit) VALUES ({', '.join(values)});\n")
                             total_posts += 1
-                            print(f"\nLink inserted: {datos['url']} ({datos['plataforma']})")
+                            enlace_count += 1
+                            print(f"\r[{'=' * (total_posts % 10)}{' ' * (10 - (total_posts % 10))}] Insertando... {total_posts}", end='')
         tg_service.disconnect()
-        print(f"✅ Export complete: {total_posts} posts saved to {out_file} (PostgreSQL)")
+        print(f"\n ✅ Export complete: {total_posts} posts saved to {out_file} (PostgreSQL)")
     else:
         tg_service.disconnect()
         print("Format not supported.")

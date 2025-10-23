@@ -6,4 +6,3 @@ selenium
 psycopg2-binary
 yt-dlp
 ffmpeg
-rich

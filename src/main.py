@@ -18,9 +18,8 @@ def main():
 
     # groups
     groups_parser = subparsers.add_parser("groups")
-    groups_parser.add_argument("--save", type=str, help="Archivo donde guardar los grupos")
-    groups_parser.add_argument("--format", type=str, choices=["csv", "json"], default="csv", help="Formato de exportación de grupos")
-    groups_parser.add_argument("--out", type=str, required=False, help="Archivo de salida para exportar los grupos")
+    groups_parser.add_argument("--format", type=str, choices=["csv", "json"], default="csv", help="Export format for groups")
+    groups_parser.add_argument("--out", type=str, required=False, help="Output file for exported groups")
 
     # fetch
     fetch_parser = subparsers.add_parser("fetch")
@@ -34,16 +33,16 @@ def main():
     args = parser.parse_args()
 
     if args.command == "setup":
-        from cli import setup
+        from src.cli import setup
         setup.run(args)
     elif args.command == "login":
-        from cli import login
+        from src.cli import login
         login.run(args)
     elif args.command == "groups":
-        from cli import groups
+        from src.cli import groups
         groups.run(args)
     elif args.command == "fetch":
-        from cli import fetch
+        from src.cli import fetch
         fetch.run(args)
     else:
         parser.print_help()

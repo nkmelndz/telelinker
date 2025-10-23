@@ -1,0 +1,10 @@
+{
+    "version": "1.1.0",
+    "description": "Telelinker CLI tool",
+    "homepage": "https://github.com/nkmelndz/telelinker",
+    "license": "MIT",
+    "url": "https://github.com/nkmelndz/telelinker/releases/download/v1.1.0/telelinker.exe",
+    "hash": "0A3B7D853A8B66D8E5E2362918A812026B8AE48A45560697A0A8C4463FAEEFD4",
+    "depends": [],
+    "bin": "telelinker.exe"
+}

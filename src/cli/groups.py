@@ -5,27 +5,35 @@ from src.services.telegram_service import TelegramService
 
 def run(args):
     
-    # Read config
-    if not os.path.exists("config.json"):
-        print("❌ Config file not found. Run 'telelinker setup' first.")
+    # Leer configuración desde la carpeta del usuario
+    config_dir = os.path.join(os.path.expanduser("~"), ".telelinker")
+    config_path = os.path.join(config_dir, "config.json")
+
+    if not os.path.exists(config_path):
+        print(f"❌ Config file not found. Run 'telelinker setup' first. Esperado en: {config_path}")
         return
-    with open("config.json", "r") as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         cfg = json.load(f)
     api_id = cfg["API_ID"]
     api_hash = cfg["API_HASH"]
     session_name = cfg["SESSION_NAME"]
+    
 
-    session_file = f"{session_name}.session"
+    session_file = os.path.join(config_dir, f"{session_name}.session")
     if not os.path.exists(session_file):
-        print(f"❌ Session not found. Run 'telelinker login' to authenticate.")
+        print(f"❌ Session not found. Run 'telelinker login' to authenticate. Esperado en: {session_file}")
         return
     
-    client = TelegramService(session_name, api_id, api_hash)
+    client = TelegramService(session_file, api_id, api_hash)
     
     grupos = []
     
 
-    export_file = getattr(args, "out", None) or getattr(args, "save", None)
+    exports_dir = os.path.join(config_dir, "exports")
+    os.makedirs(exports_dir, exist_ok=True)
+    export_file = getattr(args, "out", None)
+    if not export_file:
+        export_file = os.path.join(exports_dir, "groups.csv" if export_format=="csv" else "groups.json")
     export_format = getattr(args, "format", "csv")
     if export_file:
         for dialog in client.iter_user_dialogs():
