@@ -40,28 +40,45 @@ scoop update telelinker
 
 ### Opción 2: Desde el código fuente
 
+**⚠️ Requisitos del sistema:**
 ```bash
-# Clonar el repositorio
+# Windows (Scoop)
+scoop install googlechrome chromedriver
+
+# Linux/macOS
+# Chrome/Chromium + ChromeDriver
+```
+
+**Instalación:**
+```bash
 git clone https://github.com/nkmelndz/telelinker.git
 cd telelinker
-
-# Crear entorno virtual
 python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-
-# Instalar dependencias
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+python -m src.main setup
 ```
 
 ### Opción 3: Docker
 
 ```bash
+# Clonar el repositorio
+git clone https://github.com/nkmelndz/telelinker.git
+
+# Navegar al directorio del proyecto
+cd telelinker
+
 # Construir la imagen
 docker build -t telelinker .
 
-# Ejecutar
+# Ejecutar (Linux/macOS)
 docker run --rm -it -u "$(id -u):$(id -g)" -v "$(pwd)":/app telelinker
 
+# Ejecutar (Windows PowerShell) - Con persistencia de configuración
+docker run --rm -it -v "${PWD}:/app" -v "${HOME}/.telelinker:/root/.telelinker" telelinker
+
+# Ejecutar (Windows CMD) - Con persistencia de configuración  
+docker run --rm -it -v "%cd%:/app" -v "%USERPROFILE%/.telelinker:/root/.telelinker" telelinker
 ```
 
 ## ⚙️ Configuración inicial
