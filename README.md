@@ -60,7 +60,8 @@ pip install -r requirements.txt
 docker build -t telelinker .
 
 # Ejecutar
-docker run -it --env-file .env telelinker
+docker run --rm -it -u "$(id -u):$(id -g)" -v "$(pwd)":/app telelinker
+
 ```
 
 ## ⚙️ Configuración inicial
