@@ -33,19 +33,19 @@ def main():
     args = parser.parse_args()
 
     if args.command == "setup":
-        from src.cli import setup
+        from src.cli.commands import setup
         setup.run(args)
     elif args.command == "login":
-        from src.cli import login
+        from src.cli.commands import login
         login.run(args)
     elif args.command == "logout":
-        from src.cli import logout
+        from src.cli.commands import logout
         logout.run(args)
     elif args.command == "groups":
-        from src.cli import groups
+        from src.cli.commands import groups
         groups.run(args)
     elif args.command == "fetch":
-        from src.cli import fetch
+        from src.cli.commands import fetch
         fetch.run(args)
     else:
         parser.print_help()
