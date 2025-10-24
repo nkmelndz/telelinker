@@ -28,6 +28,25 @@ Para proponer nuevas funcionalidades:
 
 #### Configuración del entorno de desarrollo
 
+**⚠️ Dependencias del sistema:**
+
+Antes de configurar el entorno, instala las dependencias del sistema:
+
+```bash
+# Windows (Scoop - recomendado)
+scoop install googlechrome chromedriver ffmpeg
+
+# Linux (Ubuntu/Debian)
+sudo apt-get update
+sudo apt-get install -y chromium chromium-driver ffmpeg
+
+# macOS (Homebrew)
+brew install --cask google-chrome
+brew install chromedriver ffmpeg
+```
+
+**Configuración del proyecto:**
+
 1. Haz fork del repositorio
 2. Clona tu fork:
    ```bash
@@ -39,7 +58,7 @@ Para proponer nuevas funcionalidades:
    python -m venv venv
    source venv/bin/activate  # En Windows: venv\Scripts\activate
    ```
-4. Instala las dependencias:
+4. Instala las dependencias de Python:
    ```bash
    pip install -r requirements.txt
    ```
