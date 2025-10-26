@@ -52,15 +52,17 @@ def run(args):
         # Procesar argumentos
         export_file, export_format = get_groups_output_file(args)
         
-        # Inicializar servicio de Telegram
+        # Inicializar servicio de Telegram y asegurar que está iniciado
         client = TelegramService(session_file, config_values['api_id'], config_values['api_hash'])
+        client.start()
         
         try:
             # Recolectar grupos
             grupos = collect_groups(client)
             
             # Exportar o mostrar grupos
-            if getattr(args, "out", None) or export_format != "csv":
+            # Si el usuario especifica --format o --out, exportar; si no, mostrar tabla
+            if getattr(args, "out", None) or getattr(args, "format", None):
                 export_groups(grupos, export_file, export_format)
             else:
                 print_groups_table(grupos)

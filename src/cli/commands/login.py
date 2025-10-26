@@ -1,6 +1,6 @@
-import json
 from src.services.telegram_service import TelegramService
 from ..handlers.config import load_config, get_config_values
+
 def run(args):
     import os
     # Cargar configuración y reutilizar utilidades compartidas
@@ -14,7 +14,7 @@ def run(args):
     session_path = os.path.join(config_dir, f"{session_name}.session")
 
     if not os.path.exists(config_dir):
-        print("❌ No hay sesión activa. Ejecuta 'telelinker setup' primero.")
+        print("❌ No hay configuracion activa. Ejecuta 'telelinker setup' primero.")
         return
     
     # Iniciar sesión usando TelegramService

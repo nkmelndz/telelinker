@@ -7,7 +7,8 @@ import os
 def get_output_file(args, default_filename="output", default_format="csv"):
     """Determina el archivo de salida basado en los argumentos."""
     export_file = getattr(args, "out", None)
-    export_format = getattr(args, "format", default_format)
+    # Si el argumento format no fue proporcionado, usa el default
+    export_format = getattr(args, "format", None) or default_format
     
     if not export_file:
         extension = "csv" if export_format == "csv" else export_format

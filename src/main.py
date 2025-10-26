@@ -18,7 +18,7 @@ def main():
 
     # groups
     groups_parser = subparsers.add_parser("groups")
-    groups_parser.add_argument("--format", type=str, choices=["csv", "json"], default="csv", help="Export format for groups")
+    groups_parser.add_argument("--format", type=str, choices=["csv", "json"], default=None, help="Export format for groups")
     groups_parser.add_argument("--out", type=str, required=False, help="Output file for exported groups")
 
     # fetch
