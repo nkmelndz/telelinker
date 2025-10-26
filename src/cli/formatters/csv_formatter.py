@@ -1,6 +1,7 @@
 import csv
 import os
 from typing import List, Dict, Any
+from contextlib import contextmanager
 
 
 def ensure_directory_exists(file_path: str) -> None:
@@ -24,11 +25,12 @@ def export_groups_to_csv(groups: List[Dict[str, Any]], file_path: str) -> str:
     return file_path
 
 
-def export_posts_to_csv(rows: List[Dict[str, Any]], file_path: str) -> str:
-    """
-    Exporta las columnas requeridas incluyendo group_id:
-    group_id, url, plataforma, tipo_contenido, autor_contenido, fecha_publicacion,
-    likes, comentarios, compartidos, visitas.
+
+
+@contextmanager
+def open_posts_csv_writer(file_path: str):
+    """Context manager que abre un CSV, escribe cabecera y devuelve write_row(row).
+    Cad a llamada a write_row escribe una fila y hace flush para escritura en streaming.
     """
     ensure_directory_exists(file_path)
 
@@ -45,10 +47,11 @@ def export_posts_to_csv(rows: List[Dict[str, Any]], file_path: str) -> str:
         "visitas",
     ]
 
-    with open(file_path, mode="w", newline="", encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=headers)
-        writer.writeheader()
-        for r in rows:
+    f = open(file_path, mode="w", newline="", encoding="utf-8")
+    writer = csv.DictWriter(f, fieldnames=headers)
+    writer.writeheader()
+    try:
+        def write_row(r: Dict[str, Any]):
             writer.writerow({
                 "group_id": r.get("group_id"),
                 "url": r.get("url"),
@@ -61,5 +64,7 @@ def export_posts_to_csv(rows: List[Dict[str, Any]], file_path: str) -> str:
                 "compartidos": r.get("compartidos"),
                 "visitas": r.get("visitas"),
             })
-
-    return file_path
+            f.flush()
+        yield write_row
+    finally:
+        f.close()
