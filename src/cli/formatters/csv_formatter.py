@@ -1,43 +1,63 @@
-"""
-Formatter especializado para exportación CSV.
-"""
 import csv
-from ..handlers.output import ensure_directory_exists
+import os
+from typing import List, Dict, Any
 
 
-def export_groups_to_csv(grupos, export_file):
-    """Exporta los grupos a formato CSV."""
-    ensure_directory_exists(export_file)
-    
-    with open(export_file, "w", encoding="utf-8", newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(["id", "name"])  # Header
-        for grupo in grupos:
-            writer.writerow([grupo['id'], grupo['name']])
+def ensure_directory_exists(file_path: str) -> None:
+    os.makedirs(os.path.dirname(file_path) or ".", exist_ok=True)
 
 
-def export_posts_to_csv(posts, export_file):
-    """Exporta los posts a formato CSV."""
-    ensure_directory_exists(export_file)
-    
-    with open(export_file, "w", encoding="utf-8", newline='') as f:
-        writer = csv.writer(f)
-        # Header
-        writer.writerow(["group_id", "group_name", "message_id", "date", "message", "urls"])
-        
-        for post in posts:
-            writer.writerow([
-                post.get('group_id', ''),
-                post.get('group_name', ''),
-                post.get('message_id', ''),
-                post.get('date', ''),
-                post.get('message', ''),
-                post.get('urls', '')
-            ])
+def export_groups_to_csv(groups: List[Dict[str, Any]], file_path: str) -> str:
+    ensure_directory_exists(file_path)
+
+    headers = ["id", "name"]
+
+    with open(file_path, mode="w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=headers)
+        writer.writeheader()
+        for group in groups:
+            writer.writerow({
+                "id": group.get("id"),
+                "name": group.get("name"),
+            })
+
+    return file_path
 
 
-def format_data_for_csv(data):
-    """Formatea los datos para exportación CSV."""
-    if isinstance(data, list):
-        return '; '.join(str(item) for item in data)
-    return str(data) if data is not None else ''
+def export_posts_to_csv(rows: List[Dict[str, Any]], file_path: str) -> str:
+    """
+    Exporta solo las columnas requeridas por enlaces_redes_sociales:
+    url, plataforma, tipo_contenido, autor_contenido, fecha_publicacion,
+    likes, comentarios, compartidos, visitas.
+    """
+    ensure_directory_exists(file_path)
+
+    headers = [
+        "url",
+        "plataforma",
+        "tipo_contenido",
+        "autor_contenido",
+        "fecha_publicacion",
+        "likes",
+        "comentarios",
+        "compartidos",
+        "visitas",
+    ]
+
+    with open(file_path, mode="w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=headers)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow({
+                "url": r.get("url"),
+                "plataforma": r.get("plataforma"),
+                "tipo_contenido": r.get("tipo_contenido"),
+                "autor_contenido": r.get("autor_contenido"),
+                "fecha_publicacion": r.get("fecha_publicacion"),
+                "likes": r.get("likes"),
+                "comentarios": r.get("comentarios"),
+                "compartidos": r.get("compartidos"),
+                "visitas": r.get("visitas"),
+            })
+
+    return file_path

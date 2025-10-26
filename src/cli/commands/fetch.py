@@ -1,16 +1,17 @@
-import csv
-import json
-import os
 import re
+import os
+from datetime import datetime
 from src.services.telegram_service import TelegramService
 from src.scrapers import SCRAPERS
 from ..handlers.config import load_config, get_config_values
 from ..handlers.session import validate_session
 from ..handlers.output import get_fetch_output_file
-from ..formatters.csv_formatter import export_posts_to_csv, format_data_for_csv
-from ..formatters.sql_formatter import format_data_for_sql, generate_sql_file
+from ..formatters.csv_formatter import export_posts_to_csv
+from ..formatters.sql_formatter import generate_sql_file
+from src.utils.normalize_date import normalize_date
+from src.utils.parse_count import _parse_count as parse_count
 
-
+# Detección básica de plataforma según dominio
 DOMAIN_TO_PLATFORM = {
     'linkedin.com': 'LinkedIn',
     'dev.to': 'Dev.to',
@@ -21,17 +22,7 @@ DOMAIN_TO_PLATFORM = {
     'tiktok.com': 'TikTok',
 }
 
-FIELDNAMES = [
-    "url",
-    "platform",
-    "content_type",
-    "author",
-    "date",
-    "likes",
-    "comments",
-    "shared",
-    "visit"
-]
+URL_REGEX = re.compile(r"https?://[^\s]+", re.IGNORECASE)
 
 
 def pick_scraper(url: str):
@@ -44,135 +35,137 @@ def pick_scraper(url: str):
     return None, None
 
 
+def extract_urls(text: str):
+    if not text:
+        return []
+    return URL_REGEX.findall(text)
+
+
+def process_message_urls(msg, limit, enlace_count):
+    """Extrae URLs del mensaje, detecta plataforma y ejecuta el scraper.
+    Devuelve solo URLs de plataformas soportadas con 'url', 'platform', 'data'.
+    El límite cuenta únicamente enlaces soportados.
+    """
+    urls = extract_urls(getattr(msg, 'message', '') or '')
+    processed = []
+    for url in urls:
+        platform, scraper = pick_scraper(url)
+        if not scraper:
+            # Saltar URLs de plataformas no soportadas
+            continue
+        scraped = None
+        try:
+            scraped = scraper(url)
+        except Exception:
+            scraped = None
+        processed.append({'url': url, 'platform': platform, 'data': scraped})
+        enlace_count[0] += 1
+        if limit is not None and enlace_count[0] >= limit:
+            break
+    return processed
+
+
+def print_fetch_message(group, limit):
+    lim_txt = f" (limit {limit})" if limit is not None else " (sin límite)"
+    print(f"🔎 Fetching from group {group['name']} [{group['id']}]" + lim_txt)
+
+
+def print_progress(count):
+    print(f"➡ Procesadas {count} urls...")
+
+
 def load_groups_from_args(args):
     """Carga los grupos desde los argumentos (archivo o grupo individual)."""
     groups = []
-    
     if hasattr(args, 'groups_file') and args.groups_file:
         # Cargar desde archivo
         if not os.path.exists(args.groups_file):
             raise FileNotFoundError(f"❌ Groups file not found: {args.groups_file}")
-        
         with open(args.groups_file, "r", encoding="utf-8") as f:
             lines = f.readlines()
             # Saltar la primera línea si contiene encabezados
             start_index = 1 if lines and lines[0].strip().lower().startswith('id') else 0
-            
             for line in lines[start_index:]:
                 line = line.strip()
                 if line and not line.startswith("#"):
                     parts = line.split(",")
                     if len(parts) >= 2:
                         groups.append({"id": int(parts[0]), "name": parts[1]})
-    
     elif hasattr(args, 'group') and args.group:
         # Grupo individual
-        groups.append({"id": args.group, "name": args.group})
-    
+        gid = args.group
+        try:
+            gid_int = int(gid)
+            groups.append({"id": gid_int, "name": str(gid_int)})
+        except Exception:
+            groups.append({"id": gid, "name": gid})
     return groups
 
 
-def process_message_urls(msg, limit, enlace_count):
-    """Procesa las URLs encontradas en un mensaje."""
-    # Verificar que el mensaje no sea None
-    if not msg or not msg.message:
-        return []
-        
-    urls = re.findall(r'https?://[^\s]+', msg.message)
-    processed_urls = []
-    
-    for url in urls:
-        if enlace_count[0] >= limit:
-            break
-            
-        platform, scraper_fn = pick_scraper(url)
-        if platform and scraper_fn:
-            try:
-                datos = scraper_fn(url)
-                if datos:
-                    processed_urls.append({
-                        'url': url,
-                        'platform': platform,
-                        'data': datos
-                    })
-                    enlace_count[0] += 1
-            except Exception as e:
-                print(f"⚠️  Error scraping {url}: {str(e)}")
-    
-    return processed_urls
-
-
 def export_to_csv(groups, tg_service, limit, out_file):
-    """Exporta los datos a formato CSV."""
-    posts = []
+    """Exporta filas por URL con solo los campos requeridos."""
+    rows = []
     enlace_count = [0]
-    
     for group in groups:
         print_fetch_message(group, limit)
-        
-        for msg in tg_service.iter_group_messages(group["id"]):
-            if enlace_count[0] >= limit:
-                break
-                
-            processed_urls = process_message_urls(msg, limit, enlace_count)
-            
-            for url_data in processed_urls:
-                post_data = {
-                    'group_id': group["id"],
-                    'group_name': group["name"],
-                    'message_id': msg.id,
-                    'date': msg.date.strftime("%Y-%m-%d %H:%M:%S"),
-                    'message': msg.message,
-                    'urls': url_data['url']
-                }
-                posts.append(post_data)
-        
+        try:
+            for msg in tg_service.iter_group_messages(group["id"]):
+                processed_urls = process_message_urls(msg, limit, enlace_count)
+                if processed_urls:
+                    for u in processed_urls:
+                        data = u.get('data') or {}
+                        rows.append({
+                            'url': u.get('url'),
+                            'plataforma': u.get('platform'),
+                            'tipo_contenido': data.get('tipo_contenido'),
+                            'autor_contenido': data.get('autor_contenido'),
+                            'fecha_publicacion': normalize_date(data.get('fecha_publicacion')) if data.get('fecha_publicacion') else None,
+                            'likes': parse_count(str(data.get('likes'))) if data.get('likes') is not None else None,
+                            'comentarios': parse_count(str(data.get('comentarios'))) if data.get('comentarios') is not None else None,
+                            'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
+                            'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
+                        })
+                if limit is not None and enlace_count[0] >= limit:
+                    break
+        except Exception as e:
+            print(f"⚠️ No se pudo iterar mensajes del grupo {group['id']}: {e}")
+            continue
         print_progress(enlace_count[0])
-    
-    export_posts_to_csv(posts, out_file)
+    export_posts_to_csv(rows, out_file)
     return enlace_count[0]
 
 
 def export_to_postgresql(groups, tg_service, limit, out_file):
-    """Exporta los datos a PostgreSQL o genera archivo SQL."""
-    posts = []
+    """Genera archivo SQL con filas por URL y solo columnas requeridas."""
+    rows = []
     enlace_count = [0]
-    
     for group in groups:
         print_fetch_message(group, limit)
-        
-        for msg in tg_service.iter_group_messages(group["id"]):
-            if enlace_count[0] >= limit:
-                break
-                
-            processed_urls = process_message_urls(msg, limit, enlace_count)
-            
-            for url_data in processed_urls:
-                post_data = {
-                    'group_id': group["id"],
-                    'group_name': group["name"],
-                    'message_id': msg.id,
-                    'date': msg.date.strftime("%Y-%m-%d %H:%M:%S"),
-                    'message': msg.message,
-                    'urls': [url_data['url']]
-                }
-                posts.append(post_data)
-        
+        try:
+            for msg in tg_service.iter_group_messages(group["id"]):
+                processed_urls = process_message_urls(msg, limit, enlace_count)
+                if processed_urls:
+                    for u in processed_urls:
+                        data = u.get('data') or {}
+                        rows.append({
+                            'url': u.get('url'),
+                            'plataforma': u.get('platform'),
+                            'tipo_contenido': data.get('tipo_contenido'),
+                            'autor_contenido': data.get('autor_contenido'),
+                            'fecha_publicacion': normalize_date(data.get('fecha_publicacion')) if data.get('fecha_publicacion') else None,
+                            'likes': parse_count(str(data.get('likes'))) if data.get('likes') is not None else None,
+                            'comentarios': parse_count(str(data.get('comentarios'))) if data.get('comentarios') is not None else None,
+                            'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
+                            'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
+                        })
+                if limit is not None and enlace_count[0] >= limit:
+                    break
+        except Exception as e:
+            print(f"⚠️ No se pudo iterar mensajes del grupo {group['id']}: {e}")
+            continue
         print_progress(enlace_count[0])
-    
-    # Generar archivo SQL
-    generate_sql_file(posts, out_file)
+    generate_sql_file(rows, out_file)
     return enlace_count[0]
-
-
-def print_fetch_message(group, limit):
-    """Imprime mensaje de inicio de fetch para un grupo."""
-    print(f"🔍 Fetching from group: {group['name']} (limit: {limit})")
-
-
-def print_progress(total_posts):
-    """Imprime el progreso actual."""
-    print(f"📊 Processed {total_posts} posts so far...")
 
 
 def run(args):
@@ -181,36 +174,37 @@ def run(args):
         # Cargar configuración
         cfg, config_dir = load_config()
         config_values = get_config_values(cfg)
-        
         # Validar sesión
         session_file = validate_session(config_dir, config_values['session_name'])
-        
         # Cargar grupos
         groups = load_groups_from_args(args)
         if not groups:
             raise ValueError("❌ No groups specified. Use --group or --groups-file")
-        
         # Procesar argumentos
         export_file, export_format = get_fetch_output_file(args)
-        limit = int(getattr(args, "limit", 100))
-        
+        # Límite: None significa sin límite
+        raw_limit = getattr(args, "limit", None)
+        limit = int(raw_limit) if raw_limit is not None else None
         # Inicializar servicio de Telegram y asegurar que está iniciado
         tg_service = TelegramService(session_file, config_values['api_id'], config_values['api_hash'])
         tg_service.start()
-        
         try:
             # Exportar según formato
             if export_format == "postgresql":
-                total_posts = export_to_postgresql(groups, tg_service, limit, export_file)
-                print(f"📋 Exported {total_posts} posts to {export_file} as SQL")
+                total = export_to_postgresql(groups, tg_service, limit, export_file)
+                print(f"📋 Exported {total} urls to {export_file} as SQL")
             else:
-                total_posts = export_to_csv(groups, tg_service, limit, export_file)
-                print(f"📋 Exported {total_posts} posts to {export_file} as CSV")
-                
+                total = export_to_csv(groups, tg_service, limit, export_file)
+                print(f"📋 Exported {total} urls to {export_file} as CSV")
         finally:
             tg_service.disconnect()
-            
     except FileNotFoundError as e:
         print(str(e))
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        msg = str(e).lower()
+        if "database is locked" in msg or "locked" in msg:
+            print("❌ Error: database is locked")
+            print("Cierra otros procesos de Python/Telelinker que usen la misma sesión.")
+            print("Si persiste, ejecuta 'python -m src.main logout' y luego 'python -m src.main login' para recrear la sesión.")
+        else:
+            print(f"❌ Error: {str(e)}")
