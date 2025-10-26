@@ -57,7 +57,11 @@ def run(args):
         
         # Inicializar servicio de Telegram y asegurar que está iniciado
         client = TelegramService(session_file, config_values['api_id'], config_values['api_hash'])
-        client.start()
+        success = client.start()
+        
+        if not success:
+            print("❌ Authentication failed. Please run 'telelinker login' first.")
+            return
         
         try:
             # Recolectar grupos

@@ -2,9 +2,27 @@ from __future__ import annotations
 
 import json
 from contextlib import contextmanager
-from typing import Callable, Iterable, Mapping, Any
+from typing import Callable, Iterable, Mapping, Any, List, Dict
 
 from ..handlers.output import ensure_directory_exists
+
+
+def export_groups_to_json(groups: List[Dict[str, Any]], file_path: str) -> str:
+    """Exporta una lista de grupos a un archivo JSON."""
+    ensure_directory_exists(file_path)
+    
+    # Formatear los grupos para JSON
+    formatted_groups = []
+    for group in groups:
+        formatted_groups.append({
+            "id": group.get("id"),
+            "name": group.get("name"),
+        })
+    
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(formatted_groups, f, ensure_ascii=False, indent=2)
+    
+    return file_path
 
 
 @contextmanager

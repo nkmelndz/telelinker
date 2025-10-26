@@ -19,6 +19,10 @@ def run(args):
     
     # Iniciar sesión usando TelegramService
     tg_service = TelegramService(session_path, api_id, api_hash)
-    tg_service.start()
-
-    print("✅ Logged in successfully!")
+    success = tg_service.start()
+    
+    if success:
+        print("✅ Logged in successfully!")
+    else:
+        print("❌ Login failed. Please try again.")
+        return

@@ -26,12 +26,13 @@ def main():
 
     # fetch
     fetch_parser = subparsers.add_parser("fetch")
-    group_group = fetch_parser.add_mutually_exclusive_group(required=True)
+    group_group = fetch_parser.add_mutually_exclusive_group(required=False)
     group_group.add_argument("-G", "--groups-file", type=str, help="Archivo con los grupos")
     group_group.add_argument("-g", "--group", type=str, help="ID o username del grupo")
     fetch_parser.add_argument("-f", "--format", type=str, choices=["csv", "postgresql", "json"], default="csv", help="Formato de exportación (csv, postgresql o json)")
     fetch_parser.add_argument("-l", "--limit", type=str, required=False, help="Número máximo de posts a extraer")
     fetch_parser.add_argument("-o", "--out", type=str, required=False, help="Archivo de salida")
+    fetch_parser.add_argument("-i", "--interactive", action="store_true", help="Modo interactivo para elegir grupos y exportar")
 
     args = parser.parse_args()
 

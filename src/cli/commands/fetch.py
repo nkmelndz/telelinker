@@ -12,6 +12,7 @@ from ..formatters.json_formatter import open_posts_json_writer
 from src.utils.normalize_date import normalize_date
 from src.utils.parse_count import _parse_count as parse_count
 from contextlib import contextmanager
+from InquirerPy import inquirer
 
 @contextmanager
 def group_progress(limit, group):
@@ -147,6 +148,14 @@ def print_fetch_message(group, limit):
 
 
 
+def collect_groups(client):
+    """Recolecta todos los grupos del usuario."""
+    grupos = []
+    for dialog in client.iter_user_dialogs():
+        if dialog.is_group:
+            grupos.append({"id": dialog.id, "name": dialog.name})
+    return grupos
+
 def load_groups_from_args(args):
     """Carga los grupos desde los argumentos (archivo o grupo individual).
     Soporta archivos CSV y JSON. En JSON acepta una lista de objetos
@@ -252,29 +261,94 @@ def run(args):
         config_values = get_config_values(cfg)
         # Validar sesión
         session_file = validate_session(config_dir, config_values['session_name'])
-        # Cargar grupos
-        groups = load_groups_from_args(args)
-        if not groups:
-            raise ValueError("❌ No groups specified. Use --group or --groups-file")
-        # Procesar argumentos
-        export_file, export_format = get_fetch_output_file(args)
-        # Límite: None significa sin límite
-        raw_limit = getattr(args, "limit", None)
-        limit = int(raw_limit) if raw_limit is not None else None
         # Inicializar servicio de Telegram y asegurar que está iniciado
         tg_service = TelegramService(session_file, config_values['api_id'], config_values['api_hash'])
-        tg_service.start()
+        success = tg_service.start()
+        
+        if not success:
+            print("❌ Authentication failed. Please run 'telelinker login' first.")
+            return
         try:
-            # Exportar según formato
-            if export_format == "postgresql":
-                total = export_to_postgresql(groups, tg_service, limit, export_file)
-                print(f"📋 Exported {total} urls to {export_file} as SQL")
-            elif export_format == "json":
-                total = export_to_json(groups, tg_service, limit, export_file)
-                print(f"📋 Exported {total} urls to {export_file} as JSON")
+            # Si se pidió modo interactivo explícito o no hay argumentos de grupo, iniciar InquirerPy
+            no_group_args = not getattr(args, 'groups_file', None) and not getattr(args, 'group', None)
+            if getattr(args, 'interactive', None) or no_group_args:
+                # 1) Listar grupos para seleccionar
+                grupos_disponibles = collect_groups(tg_service)
+                if not grupos_disponibles:
+                    raise ValueError("❌ No se encontraron grupos en tu cuenta")
+                choices = [{"name": f"{g['name']} ({g['id']})", "value": g} for g in grupos_disponibles]
+                selected = []
+                while not selected:
+                    selected = inquirer.checkbox(
+                        message="Selecciona grupos (espacio para marcar, enter para confirmar)",
+                        choices=choices,
+                        instruction="↑/↓ navegar, espacio seleccionar"
+                    ).execute()
+                    if not selected:
+                        print("⚠ Debes seleccionar al menos un grupo.")
+                # 2) Cantidad de enlaces por grupo
+                while True:
+                    limit_input = inquirer.text(
+                        message="Cantidad de enlaces por grupo (vacío=sin límite)",
+                        default=""
+                    ).execute()
+                    if not limit_input:
+                        limit = None
+                        break
+                    try:
+                        limit = int(limit_input)
+                        if limit < 0:
+                            print("⚠ Ingresa un número válido (>= 0)")
+                            continue
+                        break
+                    except Exception:
+                        print("⚠ Ingresa un número válido o deja vacío")
+                # 3) Formato de exportación
+                fmt = inquirer.select(
+                    message="Formato de exportación",
+                    choices=["csv", "postgresql", "json"],
+                    default="csv"
+                ).execute()
+                ext_map = {"csv": "csv", "postgresql": "sql", "json": "json"}
+                default_out = os.path.abspath(f"posts.{ext_map[fmt]}")
+                # 4) Nombre del archivo
+                out_input = inquirer.text(
+                    message="Nombre del archivo de exportación",
+                    default=default_out
+                ).execute()
+                out_file = os.path.abspath(out_input.strip()) if out_input else default_out
+                # Asegurar extensión correcta
+                ext = "." + ext_map[fmt]
+                if not out_file.lower().endswith(ext):
+                    out_file += ext
+                # Ejecutar exportación según formato
+                if fmt == "postgresql":
+                    total = export_to_postgresql(selected, tg_service, limit, out_file)
+                    print(f"📋 Exported {total} urls to {out_file} as SQL")
+                elif fmt == "json":
+                    total = export_to_json(selected, tg_service, limit, out_file)
+                    print(f"📋 Exported {total} urls to {out_file} as JSON")
+                else:
+                    total = export_to_csv(selected, tg_service, limit, out_file)
+                    print(f"📋 Exported {total} urls to {out_file} as CSV")
             else:
-                total = export_to_csv(groups, tg_service, limit, export_file)
-                print(f"📋 Exported {total} urls to {export_file} as CSV")
+                # Modo no interactivo: usar argumentos
+                groups = load_groups_from_args(args)
+                if not groups:
+                    raise ValueError("❌ No groups specified. Use --group or --groups-file")
+                export_file, export_format = get_fetch_output_file(args)
+                raw_limit = getattr(args, "limit", None)
+                limit = int(raw_limit) if raw_limit is not None else None
+                # Exportar según formato
+                if export_format == "postgresql":
+                    total = export_to_postgresql(groups, tg_service, limit, export_file)
+                    print(f"📋 Exported {total} urls to {export_file} as SQL")
+                elif export_format == "json":
+                    total = export_to_json(groups, tg_service, limit, export_file)
+                    print(f"📋 Exported {total} urls to {export_file} as JSON")
+                else:
+                    total = export_to_csv(groups, tg_service, limit, export_file)
+                    print(f"📋 Exported {total} urls to {export_file} as CSV")
         finally:
             tg_service.disconnect()
     except FileNotFoundError as e:
