@@ -11,6 +11,7 @@ from ..formatters.csv_formatter import export_posts_to_csv
 from ..formatters.sql_formatter import generate_sql_file
 from src.utils.normalize_date import normalize_date
 from src.utils.parse_count import _parse_count as parse_count
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn, TimeRemainingColumn
 
 # Detección básica de plataforma según dominio
 DOMAIN_TO_PLATFORM = {
@@ -67,12 +68,10 @@ def process_message_urls(msg, limit, enlace_count):
 
 
 def print_fetch_message(group, limit):
-    lim_txt = f" (limit {limit})" if limit is not None else " (sin límite)"
+    lim_txt = f" (limit {limit})" if limit is not None else " (no limit)"
     print(f"🔎 Fetching from group {group['name']} [{group['id']}]" + lim_txt)
 
 
-def print_progress(count):
-    print(f"➡ Procesadas {count} urls...")
 
 
 def load_groups_from_args(args):
@@ -149,31 +148,78 @@ def export_to_csv(groups, tg_service, limit, out_file):
     for group in groups:
         print_fetch_message(group, limit)
         group_count = [0]
-        try:
-            for msg in tg_service.iter_group_messages(group["id"]):
-                processed_urls = process_message_urls(msg, limit, group_count)
-                if processed_urls:
-                    for u in processed_urls:
-                        data = u.get('data') or {}
-                        rows.append({
-                            'group_id': group['id'],
-                            'url': u.get('url'),
-                            'plataforma': u.get('platform'),
-                            'tipo_contenido': data.get('tipo_contenido'),
-                            'autor_contenido': data.get('autor_contenido'),
-                            'fecha_publicacion': normalize_date(data.get('fecha_publicacion')) if data.get('fecha_publicacion') else None,
-                            'likes': parse_count(str(data.get('likes'))) if data.get('likes') is not None else None,
-                            'comentarios': parse_count(str(data.get('comentarios'))) if data.get('comentarios') is not None else None,
-                            'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
-                            'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
-                        })
-                if limit is not None and group_count[0] >= limit:
-                    break
-        except Exception as e:
-            print(f"⚠️ No se pudo iterar mensajes del grupo {group['id']}: {e}")
-            continue
+        if limit is not None:
+            # Progress bar with known total
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("Processing urls in group {task.fields[group_name]} [{task.fields[group_id]}]"),
+                BarColumn(),
+                TextColumn("{task.completed}/{task.total} urls"),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+                transient=True,
+            ) as progress:
+                task_id = progress.add_task(
+                    "fetch", total=limit, group_name=group['name'], group_id=group['id']
+                )
+                try:
+                    for msg in tg_service.iter_group_messages(group["id"]):
+                        processed_urls = process_message_urls(msg, limit, group_count)
+                        progress.advance(task_id, len(processed_urls) if processed_urls else 0)
+                        if processed_urls:
+                            for u in processed_urls:
+                                data = u.get('data') or {}
+                                rows.append({
+                                    'group_id': group['id'],
+                                    'url': u.get('url'),
+                                    'plataforma': u.get('platform'),
+                                    'tipo_contenido': data.get('tipo_contenido'),
+                                    'autor_contenido': data.get('autor_contenido'),
+                                    'fecha_publicacion': normalize_date(data.get('fecha_publicacion')) if data.get('fecha_publicacion') else None,
+                                    'likes': parse_count(str(data.get('likes'))) if data.get('likes') is not None else None,
+                                    'comentarios': parse_count(str(data.get('comentarios'))) if data.get('comentarios') is not None else None,
+                                    'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
+                                    'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
+                                })
+                        if limit is not None and group_count[0] >= limit:
+                            break
+                except Exception as e:
+                    print(f"⚠️ Could not iterate messages for group {group['id']}: {e}")
+                    continue
+        else:
+            # Indeterminate spinner with running count
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("Processing urls in group {task.fields[group_name]} [{task.fields[group_id]}]: {task.completed} urls"),
+                transient=True,
+            ) as progress:
+                task_id = progress.add_task(
+                    "fetch", total=None, group_name=group['name'], group_id=group['id']
+                )
+                try:
+                    for msg in tg_service.iter_group_messages(group["id"]):
+                        processed_urls = process_message_urls(msg, limit, group_count)
+                        progress.advance(task_id, len(processed_urls) if processed_urls else 0)
+                        if processed_urls:
+                            for u in processed_urls:
+                                data = u.get('data') or {}
+                                rows.append({
+                                    'group_id': group['id'],
+                                    'url': u.get('url'),
+                                    'plataforma': u.get('platform'),
+                                    'tipo_contenido': data.get('tipo_contenido'),
+                                    'autor_contenido': data.get('autor_contenido'),
+                                    'fecha_publicacion': normalize_date(data.get('fecha_publicacion')) if data.get('fecha_publicacion') else None,
+                                    'likes': parse_count(str(data.get('likes'))) if data.get('likes') is not None else None,
+                                    'comentarios': parse_count(str(data.get('comentarios'))) if data.get('comentarios') is not None else None,
+                                    'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
+                                    'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
+                                })
+                except Exception as e:
+                    print(f"⚠️ Could not iterate messages for group {group['id']}: {e}")
+                    continue
+        print(f"✔ Group {group['name']} [{group['id']}] processed {group_count[0]} urls")
         total_count += group_count[0]
-        print_progress(total_count)
     export_posts_to_csv(rows, out_file)
     return total_count
 
@@ -185,31 +231,78 @@ def export_to_postgresql(groups, tg_service, limit, out_file):
     for group in groups:
         print_fetch_message(group, limit)
         group_count = [0]
-        try:
-            for msg in tg_service.iter_group_messages(group["id"]):
-                processed_urls = process_message_urls(msg, limit, group_count)
-                if processed_urls:
-                    for u in processed_urls:
-                        data = u.get('data') or {}
-                        rows.append({
-                            'group_id': group['id'],
-                            'url': u.get('url'),
-                            'plataforma': u.get('platform'),
-                            'tipo_contenido': data.get('tipo_contenido'),
-                            'autor_contenido': data.get('autor_contenido'),
-                            'fecha_publicacion': normalize_date(data.get('fecha_publicacion')) if data.get('fecha_publicacion') else None,
-                            'likes': parse_count(str(data.get('likes'))) if data.get('likes') is not None else None,
-                            'comentarios': parse_count(str(data.get('comentarios'))) if data.get('comentarios') is not None else None,
-                            'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
-                            'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
-                        })
-                if limit is not None and group_count[0] >= limit:
-                    break
-        except Exception as e:
-            print(f"⚠️ No se pudo iterar mensajes del grupo {group['id']}: {e}")
-            continue
+        if limit is not None:
+            # Progress bar with known total
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("Processing urls in group {task.fields[group_name]} [{task.fields[group_id]}]"),
+                BarColumn(),
+                TextColumn("{task.completed}/{task.total} urls"),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+                transient=True,
+            ) as progress:
+                task_id = progress.add_task(
+                    "fetch", total=limit, group_name=group['name'], group_id=group['id']
+                )
+                try:
+                    for msg in tg_service.iter_group_messages(group["id"]):
+                        processed_urls = process_message_urls(msg, limit, group_count)
+                        progress.advance(task_id, len(processed_urls) if processed_urls else 0)
+                        if processed_urls:
+                            for u in processed_urls:
+                                data = u.get('data') or {}
+                                rows.append({
+                                    'group_id': group['id'],
+                                    'url': u.get('url'),
+                                    'plataforma': u.get('platform'),
+                                    'tipo_contenido': data.get('tipo_contenido'),
+                                    'autor_contenido': data.get('autor_contenido'),
+                                    'fecha_publicacion': normalize_date(data.get('fecha_publicacion')) if data.get('fecha_publicacion') else None,
+                                    'likes': parse_count(str(data.get('likes'))) if data.get('likes') is not None else None,
+                                    'comentarios': parse_count(str(data.get('comentarios'))) if data.get('comentarios') is not None else None,
+                                    'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
+                                    'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
+                                })
+                        if limit is not None and group_count[0] >= limit:
+                            break
+                except Exception as e:
+                    print(f"⚠️ Could not iterate messages for group {group['id']}: {e}")
+                    continue
+        else:
+            # Indeterminate spinner with running count
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("Processing urls in group {task.fields[group_name]} [{task.fields[group_id]}]: {task.completed} urls"),
+                transient=True,
+            ) as progress:
+                task_id = progress.add_task(
+                    "fetch", total=None, group_name=group['name'], group_id=group['id']
+                )
+                try:
+                    for msg in tg_service.iter_group_messages(group["id"]):
+                        processed_urls = process_message_urls(msg, limit, group_count)
+                        progress.advance(task_id, len(processed_urls) if processed_urls else 0)
+                        if processed_urls:
+                            for u in processed_urls:
+                                data = u.get('data') or {}
+                                rows.append({
+                                    'group_id': group['id'],
+                                    'url': u.get('url'),
+                                    'plataforma': u.get('platform'),
+                                    'tipo_contenido': data.get('tipo_contenido'),
+                                    'autor_contenido': data.get('autor_contenido'),
+                                    'fecha_publicacion': normalize_date(data.get('fecha_publicacion')) if data.get('fecha_publicacion') else None,
+                                    'likes': parse_count(str(data.get('likes'))) if data.get('likes') is not None else None,
+                                    'comentarios': parse_count(str(data.get('comentarios'))) if data.get('comentarios') is not None else None,
+                                    'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
+                                    'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
+                                })
+                except Exception as e:
+                    print(f"⚠️ Could not iterate messages for group {group['id']}: {e}")
+                    continue
+        print(f"✔ Group {group['name']} [{group['id']}] processed {group_count[0]} urls")
         total_count += group_count[0]
-        print_progress(total_count)
     generate_sql_file(rows, out_file)
     return total_count
 
@@ -250,7 +343,7 @@ def run(args):
         msg = str(e).lower()
         if "database is locked" in msg or "locked" in msg:
             print("❌ Error: database is locked")
-            print("Cierra otros procesos de Python/Telelinker que usen la misma sesión.")
-            print("Si persiste, ejecuta 'python -m src.main logout' y luego 'python -m src.main login' para recrear la sesión.")
+            print("Close other Python/Telelinker processes using the same session.")
+            print("If it persists, run 'python -m src.main logout' and then 'python -m src.main login' to recreate the session.")
         else:
             print(f"❌ Error: {str(e)}")
