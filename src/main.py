@@ -3,6 +3,8 @@ from src.services.telegram_service import TelegramService
 from src.scrapers import SCRAPERS
 import argparse
 
+
+
 def main():
     parser = argparse.ArgumentParser(prog="telelinker")
     subparsers = parser.add_subparsers(dest="command")
@@ -49,7 +51,8 @@ def main():
         from src.cli.commands import fetch
         fetch.run(args)
     else:
-        parser.print_help()
+        from src.cli.commands import welcome
+        welcome.print_banner_and_help(parser)
 
 if __name__ == '__main__':
     main()
