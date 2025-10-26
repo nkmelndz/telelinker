@@ -11,7 +11,12 @@ def get_output_file(args, default_filename="output", default_format="csv"):
     export_format = getattr(args, "format", None) or default_format
     
     if not export_file:
-        extension = "csv" if export_format == "csv" else export_format
+        # Mapear formatos a extensiones de archivo deseadas
+        extension_map = {
+            "postgresql": "sql",
+            "csv": "csv",
+        }
+        extension = extension_map.get(export_format, export_format)
         export_file = os.path.abspath(f"{default_filename}.{extension}")
     else:
         if not os.path.isabs(export_file):
