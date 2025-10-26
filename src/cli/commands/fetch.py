@@ -8,6 +8,7 @@ from ..handlers.session import validate_session
 from ..handlers.output import get_fetch_output_file
 from ..formatters.csv_formatter import open_posts_csv_writer
 from ..formatters.sql_formatter import open_sql_inserter
+from ..formatters.json_formatter import open_posts_json_writer
 from src.utils.normalize_date import normalize_date
 from src.utils.parse_count import _parse_count as parse_count
 from contextlib import contextmanager
@@ -223,6 +224,16 @@ def export_to_csv(groups, tg_service, limit, out_file):
     return total_count
 
 
+def export_to_json(groups, tg_service, limit, out_file):
+    """Exporta a JSON escribiendo elementos en streaming mientras se scrapea."""
+    total_count = 0
+    with open_posts_json_writer(out_file) as write_row:
+        for group in groups:
+            count = process_group_stream(group, tg_service, limit, on_row=write_row)
+            total_count += count
+    return total_count
+
+
 def export_to_postgresql(groups, tg_service, limit, out_file):
     """Exporta a SQL escribiendo INSERTs en streaming mientras se scrapea."""
     total_count = 0
@@ -258,6 +269,9 @@ def run(args):
             if export_format == "postgresql":
                 total = export_to_postgresql(groups, tg_service, limit, export_file)
                 print(f"📋 Exported {total} urls to {export_file} as SQL")
+            elif export_format == "json":
+                total = export_to_json(groups, tg_service, limit, export_file)
+                print(f"📋 Exported {total} urls to {export_file} as JSON")
             else:
                 total = export_to_csv(groups, tg_service, limit, export_file)
                 print(f"📋 Exported {total} urls to {export_file} as CSV")

@@ -15,6 +15,7 @@ def get_output_file(args, default_filename="output", default_format="csv"):
         extension_map = {
             "postgresql": "sql",
             "csv": "csv",
+            "json": "json",
         }
         extension = extension_map.get(export_format, export_format)
         export_file = os.path.abspath(f"{default_filename}.{extension}")
