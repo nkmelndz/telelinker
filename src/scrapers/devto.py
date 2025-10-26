@@ -14,6 +14,32 @@ def scrap(url, config=None):
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
         'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
     }
+    
+    # Función auxiliar para intentar obtener likes sin Selenium
+    def _try_get_likes_from_html(soup):
+        """Intenta obtener likes directamente del HTML sin usar Selenium"""
+        try:
+            # Buscar en diferentes posibles selectores para likes/reacciones
+            selectors = [
+                '#reaction_total_count',
+                '[data-testid="reaction-total-count"]',
+                '.reaction-total-count',
+                '[id*="reaction"]',
+                '[class*="reaction"]'
+            ]
+            
+            for selector in selectors:
+                elem = soup.select_one(selector)
+                if elem:
+                    text = elem.get_text(strip=True) or elem.get('data-count', '')
+                    if text and text.isdigit():
+                        return int(text)
+                    elif text:
+                        return _parse_count(text)
+        except Exception:
+            pass
+        return None
+    
     try:
         resp = requests.get(url, headers=headers, timeout=20)
         resp.raise_for_status()
@@ -100,24 +126,59 @@ def scrap(url, config=None):
     if likes is None:
         try:
             import platform
+            import os
+            from selenium.webdriver.chrome.service import Service
+            from selenium.common.exceptions import WebDriverException, SessionNotCreatedException
+            
             chrome_options = Options()
             chrome_options.add_argument('--headless')
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--disable-gpu')
+            chrome_options.add_argument('--disable-web-security')
+            chrome_options.add_argument('--disable-features=VizDisplayCompositor')
             chrome_options.add_argument('--window-size=1920,1080')
             chrome_options.add_argument('--user-agent=' + headers['User-Agent'])
+            
+            # Solo establecer binary_location en sistemas Linux/Unix si el archivo existe
             if platform.system() != "Windows":
-                chrome_options.binary_location = "/usr/bin/chromium"
-            # En Windows, no se establece binary_location, Selenium detecta chrome.exe automáticamente
-            driver = webdriver.Chrome(options=chrome_options)
-            driver.get(url)
-            elem = driver.find_element(By.ID, 'reaction_total_count')
-            likes_text = elem.text.strip()
-            likes = _parse_count(likes_text)
-            driver.quit()
-        except Exception:
-            likes = None
+                chromium_paths = ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"]
+                for path in chromium_paths:
+                    if os.path.exists(path):
+                        chrome_options.binary_location = path
+                        break
+            
+            # Intentar crear el driver con manejo de errores mejorado
+            driver = None
+            try:
+                # En Windows, Selenium detecta Chrome automáticamente
+                driver = webdriver.Chrome(options=chrome_options)
+            except (WebDriverException, SessionNotCreatedException) as chrome_error:
+                # Si falla, intentar con Service explícito o sin ChromeDriver en PATH
+                try:
+                    service = Service()
+                    driver = webdriver.Chrome(service=service, options=chrome_options)
+                except Exception:
+                    # Si todo falla, no usar Selenium para obtener likes
+                    raise chrome_error
+            
+            if driver:
+                driver.get(url)
+                elem = driver.find_element(By.ID, 'reaction_total_count')
+                likes_text = elem.text.strip()
+                likes = _parse_count(likes_text)
+                driver.quit()
+                
+        except Exception as e:
+            # Si falla Selenium, intentar obtener likes directamente del HTML
+            likes = _try_get_likes_from_html(soup)
+            if likes is None:
+                # Si todo falla, dejarlo como None
+                likes = None
+    
+    # Si aún no tenemos likes, intentar una última vez con el HTML estático
+    if likes is None:
+        likes = _try_get_likes_from_html(soup)
     likes = (int(likes) if isinstance(likes, (int, float)) else _parse_count(str(likes)) if likes is not None else None)
     comentarios = (int(comentarios) if isinstance(comentarios, (int, float)) else _parse_count(str(comentarios)) if comentarios is not None else None)
     visitas = (int(visitas) if isinstance(visitas, (int, float)) else _parse_count(str(visitas)) if visitas is not None else None)

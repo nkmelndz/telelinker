@@ -8,7 +8,7 @@ from ..handlers.config import load_config, get_config_values
 from ..handlers.session import validate_session
 from ..handlers.output import get_fetch_output_file
 from ..formatters.csv_formatter import export_posts_to_csv, format_data_for_csv
-from ..formatters.sql_formatter import export_posts_to_postgresql, format_data_for_sql, generate_sql_file
+from ..formatters.sql_formatter import format_data_for_sql, generate_sql_file
 
 
 DOMAIN_TO_PLATFORM = {
@@ -54,7 +54,11 @@ def load_groups_from_args(args):
             raise FileNotFoundError(f"❌ Groups file not found: {args.groups_file}")
         
         with open(args.groups_file, "r", encoding="utf-8") as f:
-            for line in f:
+            lines = f.readlines()
+            # Saltar la primera línea si contiene encabezados
+            start_index = 1 if lines and lines[0].strip().lower().startswith('id') else 0
+            
+            for line in lines[start_index:]:
                 line = line.strip()
                 if line and not line.startswith("#"):
                     parts = line.split(",")
@@ -70,6 +74,10 @@ def load_groups_from_args(args):
 
 def process_message_urls(msg, limit, enlace_count):
     """Procesa las URLs encontradas en un mensaje."""
+    # Verificar que el mensaje no sea None
+    if not msg or not msg.message:
+        return []
+        
     urls = re.findall(r'https?://[^\s]+', msg.message)
     processed_urls = []
     
@@ -102,7 +110,7 @@ def export_to_csv(groups, tg_service, limit, out_file):
     for group in groups:
         print_fetch_message(group, limit)
         
-        for msg in tg_service.get_messages(group["id"], limit=limit):
+        for msg in tg_service.iter_group_messages(group["id"]):
             if enlace_count[0] >= limit:
                 break
                 
@@ -133,7 +141,7 @@ def export_to_postgresql(groups, tg_service, limit, out_file):
     for group in groups:
         print_fetch_message(group, limit)
         
-        for msg in tg_service.get_messages(group["id"], limit=limit):
+        for msg in tg_service.iter_group_messages(group["id"]):
             if enlace_count[0] >= limit:
                 break
                 
@@ -186,8 +194,9 @@ def run(args):
         export_file, export_format = get_fetch_output_file(args)
         limit = int(getattr(args, "limit", 100))
         
-        # Inicializar servicio de Telegram
+        # Inicializar servicio de Telegram y asegurar que está iniciado
         tg_service = TelegramService(session_file, config_values['api_id'], config_values['api_hash'])
+        tg_service.start()
         
         try:
             # Exportar según formato

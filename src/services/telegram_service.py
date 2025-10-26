@@ -4,11 +4,16 @@ from telethon.errors.rpcerrorlist import SessionRevokedError, AuthKeyUnregistere
 
 
 class TelegramService:
-    def __init__(self, session_path, api_id, api_hash, connect_only=False):
+    def __init__(self, session_path, api_id, api_hash):
         try:
+            # No iniciar sesión automáticamente; solo crear el cliente
             self.client = TelegramClient(session_path, api_id, api_hash)
-            if not connect_only:
-                self.client.start()
+        except (SessionRevokedError, AuthKeyUnregisteredError):
+            pass  # Silenciar completamente el error
+
+    def start(self):
+        try:
+            self.client.start()
         except (SessionRevokedError, AuthKeyUnregisteredError):
             pass  # Silenciar completamente el error
 

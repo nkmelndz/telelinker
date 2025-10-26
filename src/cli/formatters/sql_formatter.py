@@ -5,52 +5,6 @@ import psycopg2
 from ..handlers.output import ensure_directory_exists
 
 
-def export_posts_to_postgresql(posts, connection_params):
-    """Exporta los posts a PostgreSQL."""
-    try:
-        conn = psycopg2.connect(**connection_params)
-        cursor = conn.cursor()
-        
-        # Crear tabla si no existe
-        create_table_query = """
-        CREATE TABLE IF NOT EXISTS telegram_posts (
-            id SERIAL PRIMARY KEY,
-            group_id BIGINT,
-            group_name TEXT,
-            message_id BIGINT,
-            date TIMESTAMP,
-            message TEXT,
-            urls TEXT[]
-        );
-        """
-        cursor.execute(create_table_query)
-        
-        # Insertar datos
-        insert_query = """
-        INSERT INTO telegram_posts (group_id, group_name, message_id, date, message, urls)
-        VALUES (%s, %s, %s, %s, %s, %s);
-        """
-        
-        for post in posts:
-            cursor.execute(insert_query, (
-                post.get('group_id'),
-                post.get('group_name'),
-                post.get('message_id'),
-                post.get('date'),
-                post.get('message'),
-                post.get('urls', [])
-            ))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return True
-        
-    except Exception as e:
-        raise Exception(f"Error connecting to PostgreSQL: {str(e)}")
-
-
 def format_data_for_sql(data):
     """Formatea los datos para exportación SQL."""
     if data is None:
