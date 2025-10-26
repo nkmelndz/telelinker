@@ -1,5 +1,6 @@
 import re
 import os
+import json
 from datetime import datetime
 from src.services.telegram_service import TelegramService
 from src.scrapers import SCRAPERS
@@ -75,22 +76,61 @@ def print_progress(count):
 
 
 def load_groups_from_args(args):
-    """Carga los grupos desde los argumentos (archivo o grupo individual)."""
+    """Carga los grupos desde los argumentos (archivo o grupo individual).
+    Soporta archivos CSV y JSON. En JSON acepta una lista de objetos
+    o un objeto con clave 'groups'. Cada objeto debe tener al menos 'id' y opcionalmente 'name'.
+    """
     groups = []
     if hasattr(args, 'groups_file') and args.groups_file:
-        # Cargar desde archivo
-        if not os.path.exists(args.groups_file):
-            raise FileNotFoundError(f"❌ Groups file not found: {args.groups_file}")
-        with open(args.groups_file, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            # Saltar la primera línea si contiene encabezados
-            start_index = 1 if lines and lines[0].strip().lower().startswith('id') else 0
+        path = args.groups_file
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"❌ Groups file not found: {path}")
+        ext = os.path.splitext(path)[1].lower()
+        if ext == '.json':
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            items = data.get('groups') if isinstance(data, dict) else data
+            if not isinstance(items, list):
+                raise ValueError("❌ Invalid JSON format: expected list or {groups: []}")
+            for item in items:
+                if isinstance(item, dict):
+                    gid = item.get("id") or item.get("group_id") or item.get("channel_id")
+                    name = item.get("name") or item.get("group_name") or item.get("title")
+                    if gid is None:
+                        continue
+                    try:
+                        gid_int = int(gid)
+                        groups.append({"id": gid_int, "name": str(name or gid_int)})
+                    except Exception:
+                        groups.append({"id": gid, "name": str(name or gid)})
+                elif isinstance(item, (list, tuple)) and len(item) >= 2:
+                    id_val, name_val = item[0], item[1]
+                    try:
+                        gid_int = int(id_val)
+                        groups.append({"id": gid_int, "name": str(name_val)})
+                    except Exception:
+                        groups.append({"id": id_val, "name": str(name_val)})
+                elif isinstance(item, (int, str)):
+                    try:
+                        gid_int = int(item)
+                        groups.append({"id": gid_int, "name": str(gid_int)})
+                    except Exception:
+                        groups.append({"id": item, "name": str(item)})
+        else:
+            # CSV: admite cabecera opcional 'id,name' en la primera línea
+            with open(path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            start_index = 1 if lines and lines[0].strip().lower().startswith(('id', 'group_id')) else 0
             for line in lines[start_index:]:
                 line = line.strip()
                 if line and not line.startswith("#"):
-                    parts = line.split(",")
+                    parts = [p.strip() for p in line.split(",")]
                     if len(parts) >= 2:
-                        groups.append({"id": int(parts[0]), "name": parts[1]})
+                        id_raw, name_raw = parts[0], parts[1]
+                        try:
+                            groups.append({"id": int(id_raw), "name": name_raw})
+                        except Exception:
+                            groups.append({"id": id_raw, "name": name_raw})
     elif hasattr(args, 'group') and args.group:
         # Grupo individual
         gid = args.group
