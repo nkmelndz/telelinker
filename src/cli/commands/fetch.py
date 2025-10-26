@@ -143,14 +143,15 @@ def load_groups_from_args(args):
 
 
 def export_to_csv(groups, tg_service, limit, out_file):
-    """Exporta filas por URL con solo los campos requeridos."""
+    """Exporta filas por URL con solo los campos requeridos (límite por grupo)."""
     rows = []
-    enlace_count = [0]
+    total_count = 0
     for group in groups:
         print_fetch_message(group, limit)
+        group_count = [0]
         try:
             for msg in tg_service.iter_group_messages(group["id"]):
-                processed_urls = process_message_urls(msg, limit, enlace_count)
+                processed_urls = process_message_urls(msg, limit, group_count)
                 if processed_urls:
                     for u in processed_urls:
                         data = u.get('data') or {}
@@ -165,25 +166,27 @@ def export_to_csv(groups, tg_service, limit, out_file):
                             'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
                             'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
                         })
-                if limit is not None and enlace_count[0] >= limit:
+                if limit is not None and group_count[0] >= limit:
                     break
         except Exception as e:
             print(f"⚠️ No se pudo iterar mensajes del grupo {group['id']}: {e}")
             continue
-        print_progress(enlace_count[0])
+        total_count += group_count[0]
+        print_progress(total_count)
     export_posts_to_csv(rows, out_file)
-    return enlace_count[0]
+    return total_count
 
 
 def export_to_postgresql(groups, tg_service, limit, out_file):
-    """Genera archivo SQL con filas por URL y solo columnas requeridas."""
+    """Genera archivo SQL con filas por URL (límite por grupo) y solo columnas requeridas."""
     rows = []
-    enlace_count = [0]
+    total_count = 0
     for group in groups:
         print_fetch_message(group, limit)
+        group_count = [0]
         try:
             for msg in tg_service.iter_group_messages(group["id"]):
-                processed_urls = process_message_urls(msg, limit, enlace_count)
+                processed_urls = process_message_urls(msg, limit, group_count)
                 if processed_urls:
                     for u in processed_urls:
                         data = u.get('data') or {}
@@ -198,14 +201,15 @@ def export_to_postgresql(groups, tg_service, limit, out_file):
                             'compartidos': parse_count(str(data.get('compartidos'))) if data.get('compartidos') is not None else None,
                             'visitas': parse_count(str(data.get('visitas'))) if data.get('visitas') is not None else None,
                         })
-                if limit is not None and enlace_count[0] >= limit:
+                if limit is not None and group_count[0] >= limit:
                     break
         except Exception as e:
             print(f"⚠️ No se pudo iterar mensajes del grupo {group['id']}: {e}")
             continue
-        print_progress(enlace_count[0])
+        total_count += group_count[0]
+        print_progress(total_count)
     generate_sql_file(rows, out_file)
-    return enlace_count[0]
+    return total_count
 
 
 def run(args):
