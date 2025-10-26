@@ -4,6 +4,9 @@ from ..handlers.session import validate_session
 from ..handlers.output import get_groups_output_file
 from ..formatters.csv_formatter import export_groups_to_csv
 from ..formatters.json_formatter import export_groups_to_json
+import os
+from InquirerPy import inquirer
+
 
 
 def collect_groups(client):
@@ -61,11 +64,44 @@ def run(args):
             grupos = collect_groups(client)
             
             # Exportar o mostrar grupos
-            # Si el usuario especifica --format o --out, exportar; si no, mostrar tabla
-            if getattr(args, "out", None) or getattr(args, "format", None):
-                export_groups(grupos, export_file, export_format)
+            if getattr(args, "interactive", None):
+                # Modo interactivo con InquirerPy
+                choices = [{"name": f"{g['name']} ({g['id']})", "value": g} for g in grupos]
+                # Selección con reintento si no se elige ningún grupo
+                while True:
+                    selected = inquirer.checkbox(
+                        message="Selecciona grupos (espacio para marcar, enter para confirmar)",
+                        choices=choices,
+                        instruction="↑/↓ para navegar, espacio para seleccionar"
+                    ).execute()
+                    if selected:
+                        break
+                    print("⚠ Debes seleccionar al menos un grupo.")
+
+                fmt = inquirer.select(
+                    message="Formato de salida",
+                    choices=["csv", "json"],
+                    default="csv"
+                ).execute()
+
+                default_out = os.path.abspath(f"groups.{fmt}")
+                out_input = inquirer.text(
+                    message="Nombre del archivo de exportación",
+                    default=default_out
+                ).execute()
+
+                out_file = os.path.abspath(out_input.strip()) if out_input else default_out
+                ext = ".csv" if fmt == "csv" else ".json"
+                if not out_file.lower().endswith(ext):
+                    out_file += ext
+
+                export_groups(selected, out_file, fmt)
             else:
-                print_groups_table(grupos)
+                # Si el usuario especifica --format o --out, exportar; si no, mostrar tabla
+                if getattr(args, "out", None) or getattr(args, "format", None):
+                    export_groups(grupos, export_file, export_format)
+                else:
+                    print_groups_table(grupos)
                 
         finally:
             client.disconnect()

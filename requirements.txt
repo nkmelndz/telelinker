@@ -6,3 +6,4 @@ selenium
 psycopg2-binary
 yt-dlp
 ffmpeg
+InquirerPy
