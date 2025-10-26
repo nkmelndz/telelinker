@@ -156,6 +156,7 @@ def export_to_csv(groups, tg_service, limit, out_file):
                     for u in processed_urls:
                         data = u.get('data') or {}
                         rows.append({
+                            'group_id': group['id'],
                             'url': u.get('url'),
                             'plataforma': u.get('platform'),
                             'tipo_contenido': data.get('tipo_contenido'),
@@ -191,6 +192,7 @@ def export_to_postgresql(groups, tg_service, limit, out_file):
                     for u in processed_urls:
                         data = u.get('data') or {}
                         rows.append({
+                            'group_id': group['id'],
                             'url': u.get('url'),
                             'plataforma': u.get('platform'),
                             'tipo_contenido': data.get('tipo_contenido'),

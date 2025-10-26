@@ -20,11 +20,12 @@ def generate_sql_file(rows: List[Dict[str, Any]], file_path: str) -> str:
     """
     Genera un archivo SQL con la tabla enlaces_redes_sociales y
     sentencias INSERT por cada URL procesada.
-    Solo incluye las columnas requeridas.
+    Incluye group_id y las columnas requeridas.
     """
     ensure_directory_exists(file_path)
 
     columns = [
+        "group_id",
         "url",
         "plataforma",
         "tipo_contenido",
@@ -39,6 +40,7 @@ def generate_sql_file(rows: List[Dict[str, Any]], file_path: str) -> str:
     create_table = (
         "CREATE TABLE IF NOT EXISTS enlaces_redes_sociales (\n"
         "  id SERIAL PRIMARY KEY,\n"
+        "  group_id BIGINT NOT NULL,\n"
         "  url TEXT NOT NULL,\n"
         "  plataforma VARCHAR(50) NOT NULL,\n"
         "  tipo_contenido VARCHAR(50),\n"
@@ -56,6 +58,7 @@ def generate_sql_file(rows: List[Dict[str, Any]], file_path: str) -> str:
         f.write(create_table)
         for r in rows:
             values = [
+                _escape(r.get("group_id")),
                 _escape(r.get("url")),
                 _escape(r.get("plataforma")),
                 _escape(r.get("tipo_contenido")),

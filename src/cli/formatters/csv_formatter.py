@@ -26,13 +26,14 @@ def export_groups_to_csv(groups: List[Dict[str, Any]], file_path: str) -> str:
 
 def export_posts_to_csv(rows: List[Dict[str, Any]], file_path: str) -> str:
     """
-    Exporta solo las columnas requeridas por enlaces_redes_sociales:
-    url, plataforma, tipo_contenido, autor_contenido, fecha_publicacion,
+    Exporta las columnas requeridas incluyendo group_id:
+    group_id, url, plataforma, tipo_contenido, autor_contenido, fecha_publicacion,
     likes, comentarios, compartidos, visitas.
     """
     ensure_directory_exists(file_path)
 
     headers = [
+        "group_id",
         "url",
         "plataforma",
         "tipo_contenido",
@@ -49,6 +50,7 @@ def export_posts_to_csv(rows: List[Dict[str, Any]], file_path: str) -> str:
         writer.writeheader()
         for r in rows:
             writer.writerow({
+                "group_id": r.get("group_id"),
                 "url": r.get("url"),
                 "plataforma": r.get("plataforma"),
                 "tipo_contenido": r.get("tipo_contenido"),
