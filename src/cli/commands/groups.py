@@ -74,13 +74,13 @@ def run(args):
                 # Selección con reintento si no se elige ningún grupo
                 while True:
                     selected = inquirer.checkbox(
-                        message="Selecciona grupos (espacio para marcar, enter para confirmar)",
+                        message="Select groups (space to mark, enter to confirm)",
                         choices=choices,
-                        instruction="↑/↓ para navegar, espacio para seleccionar"
+                        instruction="↑/↓ navigate, space to select"
                     ).execute()
                     if selected:
                         break
-                    print("⚠ Debes seleccionar al menos un grupo.")
+                    print("⚠ You must select at least one group.")
 
                 fmt = inquirer.select(
                     message="Formato de salida",

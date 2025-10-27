@@ -275,17 +275,17 @@ def run(args):
                 # 1) Listar grupos para seleccionar
                 grupos_disponibles = collect_groups(tg_service)
                 if not grupos_disponibles:
-                    raise ValueError("❌ No se encontraron grupos en tu cuenta")
+                    raise ValueError("❌ No groups found in your account")
                 choices = [{"name": f"{g['name']} ({g['id']})", "value": g} for g in grupos_disponibles]
                 selected = []
                 while not selected:
                     selected = inquirer.checkbox(
-                        message="Selecciona grupos (espacio para marcar, enter para confirmar)",
+                        message="Select groups (space to mark, enter to confirm)",
                         choices=choices,
-                        instruction="↑/↓ navegar, espacio seleccionar"
+                        instruction="↑/↓ navigate, space to select"
                     ).execute()
                     if not selected:
-                        print("⚠ Debes seleccionar al menos un grupo.")
+                        print("⚠ You must select at least one group.")
                 # 2) Cantidad de enlaces por grupo
                 while True:
                     limit_input = inquirer.text(
