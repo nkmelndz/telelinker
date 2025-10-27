@@ -1,53 +1,53 @@
 # Changelog
 
-Todos los cambios notables de este proyecto serán documentados en este archivo.
+All notable changes to this project will be documented in this file.
 
-El formato está basado en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Added
-- Archivos de configuración para proyecto open source
-- Licencia MIT
-- Guía de contribución (CONTRIBUTING.md)
-- Código de conducta (CODE_OF_CONDUCT.md)
-- Templates para issues y pull requests
-- Badges en README.md
-- Sección de contribución en README.md
+- Open source project configuration files
+- MIT License
+- Contribution guide (CONTRIBUTING.md)
+- Code of conduct (CODE_OF_CONDUCT.md)
+- Templates for issues and pull requests
+- Badges in README.md
+- Contribution section in README.md
 
 ## [1.0.0] - 2024-XX-XX
 
 ### Added
-- Herramienta CLI para extraer enlaces de grupos de Telegram
-- Soporte para múltiples formatos de exportación (CSV, PostgreSQL)
-- Scrapers para diferentes plataformas sociales:
+- CLI tool for extracting links from Telegram groups
+- Support for multiple export formats (CSV, PostgreSQL)
+- Scrapers for different social platforms:
   - Instagram
   - LinkedIn
   - Medium
   - Dev.to
   - TikTok
   - YouTube
-- Comandos principales:
-  - `telelinker setup` - Configuración inicial
-  - `telelinker login` - Autenticación con Telegram
-  - `telelinker groups` - Listar grupos disponibles
-  - `telelinker fetch` - Extraer enlaces y metadatos
-- Soporte para instalación via Scoop (Windows)
-- Dockerfile para contenedorización
-- Utilidades para normalización de fechas y conteos
+- Main commands:
+  - `telelinker setup` - Initial configuration
+  - `telelinker login` - Telegram authentication
+  - `telelinker groups` - List available groups
+  - `telelinker fetch` - Extract links and metadata
+- Support for installation via Scoop (Windows)
+- Dockerfile for containerization
+- Utilities for date normalization and counts
 
 ### Security
-- Archivo .env.example para configuración segura
-- Exclusión de credenciales en .gitignore
+- .env.example file for secure configuration
+- Credentials exclusion in .gitignore
 
 ---
 
-## Tipos de cambios
+## Types of changes
 
-- `Added` para nuevas funcionalidades
-- `Changed` para cambios en funcionalidades existentes
-- `Deprecated` para funcionalidades que serán removidas pronto
-- `Removed` para funcionalidades removidas
-- `Fixed` para corrección de bugs
-- `Security` para vulnerabilidades
+- `Added` for new features
+- `Changed` for changes in existing functionality
+- `Deprecated` for soon-to-be removed features
+- `Removed` for removed features
+- `Fixed` for bug fixes
+- `Security` for vulnerabilities

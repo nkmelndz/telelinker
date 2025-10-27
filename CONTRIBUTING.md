@@ -1,39 +1,39 @@
-# Contribuir a Telelinker
+# Contributing to Telelinker
 
-¡Gracias por tu interés en contribuir a Telelinker! Este documento te guiará sobre cómo participar en el desarrollo del proyecto.
+Thank you for your interest in contributing to Telelinker! This document will guide you on how to participate in the project's development.
 
-## Cómo contribuir
+## How to contribute
 
-### Reportar bugs
+### Reporting bugs
 
-Si encuentras un error:
+If you find an error:
 
-1. Verifica que no haya sido reportado anteriormente en [Issues](../../issues)
-2. Crea un nuevo issue con:
-   - Descripción clara del problema
-   - Pasos para reproducir el error
-   - Versión de Python y sistema operativo
-   - Logs o capturas de pantalla si es relevante
+1. Check that it hasn't been reported previously in [Issues](../../issues)
+2. Create a new issue with:
+   - Clear description of the problem
+   - Steps to reproduce the error
+   - Python version and operating system
+   - Logs or screenshots if relevant
 
-### Sugerir mejoras
+### Suggesting improvements
 
-Para proponer nuevas funcionalidades:
+To propose new features:
 
-1. Abre un issue con la etiqueta "enhancement"
-2. Describe claramente la funcionalidad propuesta
-3. Explica por qué sería útil para el proyecto
-4. Si es posible, proporciona ejemplos de uso
+1. Open an issue with the "enhancement" label
+2. Clearly describe the proposed functionality
+3. Explain why it would be useful for the project
+4. If possible, provide usage examples
 
-### Contribuir con código
+### Contributing code
 
-#### Configuración del entorno de desarrollo
+#### Development environment setup
 
-**⚠️ Dependencias del sistema:**
+**⚠️ System dependencies:**
 
-Antes de configurar el entorno, instala las dependencias del sistema:
+Before setting up the environment, install system dependencies:
 
 ```bash
-# Windows (Scoop - recomendado)
+# Windows (Scoop - recommended)
 scoop install googlechrome chromedriver ffmpeg
 
 # Linux (Ubuntu/Debian)
@@ -45,106 +45,106 @@ brew install --cask google-chrome
 brew install chromedriver ffmpeg
 ```
 
-**Configuración del proyecto:**
+**Project setup:**
 
-1. Haz fork del repositorio
-2. Clona tu fork:
+1. Fork the repository
+2. Clone your fork:
    ```bash
-   git clone https://github.com/tu-usuario/telelinker.git
+   git clone https://github.com/your-username/telelinker.git
    cd telelinker
    ```
-3. Crea un entorno virtual:
+3. Create a virtual environment:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # En Windows: venv\Scripts\activate
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
-4. Instala las dependencias de Python:
+4. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-#### Proceso de desarrollo
+#### Development process
 
-1. Crea una rama para tu funcionalidad:
+1. Create a branch for your feature:
    ```bash
-   git checkout -b feature/nueva-funcionalidad
+   git checkout -b feature/new-feature
    ```
-2. Realiza tus cambios siguiendo las convenciones del código
-3. Asegúrate de que tu código funcione correctamente
-4. Commit tus cambios:
+2. Make your changes following code conventions
+3. Ensure your code works correctly
+4. Commit your changes:
    ```bash
-   git commit -m "feat: descripción clara del cambio"
+   git commit -m "feat: clear description of the change"
    ```
-5. Push a tu fork:
+5. Push to your fork:
    ```bash
-   git push origin feature/nueva-funcionalidad
+   git push origin feature/new-feature
    ```
-6. Crea un Pull Request
+6. Create a Pull Request
 
-#### Convenciones de código
+#### Code conventions
 
-- Usa nombres descriptivos para variables y funciones
-- Mantén las funciones pequeñas y enfocadas en una tarea
-- Agrega comentarios para lógica compleja
-- Sigue PEP 8 para el estilo de código Python
-- Usa type hints cuando sea posible
+- Use descriptive names for variables and functions
+- Keep functions small and focused on one task
+- Add comments for complex logic
+- Follow PEP 8 for Python code style
+- Use type hints when possible
 
-#### Convenciones de commits
+#### Commit conventions
 
-Usamos [Conventional Commits](https://www.conventionalcommits.org/):
+We use [Conventional Commits](https://www.conventionalcommits.org/):
 
-- `feat:` para nuevas funcionalidades
-- `fix:` para corrección de bugs
-- `docs:` para cambios en documentación
-- `style:` para cambios de formato
-- `refactor:` para refactorización de código
-- `test:` para agregar o modificar tests
+- `feat:` for new features
+- `fix:` for bug fixes
+- `docs:` for documentation changes
+- `style:` for formatting changes
+- `refactor:` for code refactoring
+- `test:` for adding or modifying tests
 
-### Estructura del proyecto
+### Project structure
 
 ```
 telelinker/
 ├── src/
-│   ├── cli/          # Comandos de línea de comandos
-│   ├── scrapers/     # Scrapers para diferentes plataformas
-│   ├── services/     # Servicios (Telegram, etc.)
-│   └── utils/        # Utilidades compartidas
-├── tools/            # Scripts de desarrollo y testing
-└── bucket/           # Configuración para Scoop
+│   ├── cli/          # Command line commands
+│   ├── scrapers/     # Scrapers for different platforms
+│   ├── services/     # Services (Telegram, etc.)
+│   └── utils/        # Shared utilities
+├── tools/            # Development and testing scripts
+└── bucket/           # Scoop configuration
 ```
 
-### Agregar nuevos scrapers
+### Adding new scrapers
 
-Para agregar soporte a una nueva plataforma:
+To add support for a new platform:
 
-1. Crea un archivo en `src/scrapers/` con el nombre de la plataforma
-2. Implementa la función de scraping siguiendo el patrón de los scrapers existentes
-3. Agrega la detección de URL en el archivo correspondiente
-4. Actualiza la documentación
+1. Create a file in `src/scrapers/` with the platform name
+2. Implement the scraping function following the pattern of existing scrapers
+3. Add URL detection in the corresponding file
+4. Update the documentation
 
 ### Testing
 
-Antes de enviar tu PR:
+Before submitting your PR:
 
-1. Prueba tu código manualmente
-2. Verifica que no rompa funcionalidades existentes
-3. Si es posible, agrega tests para tu nueva funcionalidad
+1. Test your code manually
+2. Verify that it doesn't break existing functionality
+3. If possible, add tests for your new functionality
 
-### Documentación
+### Documentation
 
-- Actualiza el README.md si tu cambio afecta el uso de la herramienta
-- Agrega comentarios en el código para explicar lógica compleja
-- Documenta nuevos parámetros o funcionalidades
+- Update README.md if your change affects tool usage
+- Add comments in the code to explain complex logic
+- Document new parameters or features
 
-## Código de conducta
+## Code of conduct
 
-Este proyecto sigue el [Código de Conducta](CODE_OF_CONDUCT.md). Al participar, te comprometes a mantener un ambiente respetuoso y colaborativo.
+This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you commit to maintaining a respectful and collaborative environment.
 
-## ¿Necesitas ayuda?
+## Need help?
 
-Si tienes preguntas sobre cómo contribuir:
+If you have questions about how to contribute:
 
-- Abre un issue con la etiqueta "question"
-- Revisa issues existentes para ver si tu pregunta ya fue respondida
+- Open an issue with the "question" label
+- Review existing issues to see if your question has already been answered
 
-¡Esperamos tus contribuciones!
+We look forward to your contributions!

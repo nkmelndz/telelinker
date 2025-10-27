@@ -4,43 +4,43 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
 
-**Telelinker** es una herramienta de línea de comandos que extrae y analiza enlaces compartidos en grupos de Telegram. Detecta automáticamente el tipo de contenido (Instagram, LinkedIn, YouTube, TikTok, etc.), obtiene metadatos relevantes y exporta toda la información en diferentes formatos para análisis posterior.
+**Telelinker** is a command-line tool that extracts and analyzes links shared in Telegram groups. It automatically detects content type (Instagram, LinkedIn, YouTube, TikTok, etc.), retrieves relevant metadata, and exports all information in different formats for further analysis.
 
-## 🚀 ¿Qué hace Telelinker?
+## 🚀 What does Telelinker do?
 
-Telelinker te permite:
+Telelinker allows you to:
 
-- **📱 Extraer enlaces** de grupos de Telegram de forma automatizada
-- **🔍 Detectar plataformas** automáticamente (Instagram, LinkedIn, YouTube, TikTok, Medium, Dev.to)
-- **📊 Obtener metadatos** como títulos, descripciones, fechas, contadores de interacción
-- **💾 Exportar datos** en múltiples formatos (CSV, PostgreSQL)
-- **⚡ Procesar múltiples grupos** de forma eficiente
+- **📱 Extract links** from Telegram groups automatically
+- **🔍 Detect platforms** automatically (Instagram, LinkedIn, YouTube, TikTok, Medium, Dev.to)
+- **📊 Get metadata** like titles, descriptions, dates, interaction counters
+- **💾 Export data** in multiple formats (CSV, PostgreSQL)
+- **⚡ Process multiple groups** efficiently
 
-### Casos de uso típicos:
+### Typical use cases:
 
-- **Análisis de contenido**: Estudiar qué tipo de enlaces se comparten más en comunidades
-- **Investigación social**: Analizar tendencias y patrones de compartición
-- **Gestión de comunidades**: Monitorear el contenido compartido en grupos
-- **Data mining**: Recopilar datos para análisis de redes sociales
+- **Content analysis**: Study what type of links are shared most in communities
+- **Social research**: Analyze trends and sharing patterns
+- **Community management**: Monitor content shared in groups
+- **Data mining**: Collect data for social media analysis
 
-## 📦 Instalación
+## 📦 Installation
 
-### Opción 1: Scoop (Windows - Recomendado)
+### Option 1: Scoop (Windows - Recommended)
 
 ```powershell
-# Añadir el bucket
+# Add the bucket
 scoop bucket add telelinker https://github.com/nkmelndz/telelinker
 
-# Instalar
+# Install
 scoop install telelinker
 
-# Actualizar
+# Update
 scoop update telelinker
 ```
 
-### Opción 2: Desde el código fuente
+### Option 2: From source code
 
-**⚠️ Requisitos del sistema:**
+**⚠️ System requirements:**
 ```bash
 # Windows (Scoop)
 scoop install googlechrome chromedriver
@@ -49,7 +49,7 @@ scoop install googlechrome chromedriver
 # Chrome/Chromium + ChromeDriver
 ```
 
-**Instalación:**
+**Installation:**
 ```bash
 git clone https://github.com/nkmelndz/telelinker.git
 cd telelinker
@@ -59,197 +59,261 @@ pip install -r requirements.txt
 python -m src.main setup
 ```
 
-### Opción 3: Docker
+### Option 3: Docker
 
 ```bash
-# Clonar el repositorio
+# Clone the repository
 git clone https://github.com/nkmelndz/telelinker.git
 
-# Navegar al directorio del proyecto
+# Navigate to project directory
 cd telelinker
 
-# Construir la imagen
+# Build the image
 docker build -t telelinker .
 
-# Ejecutar (Linux/macOS)
+# Run (Linux/macOS)
 docker run --rm -it -u "$(id -u):$(id -g)" -v "$(pwd)":/app telelinker
 
-# Ejecutar (Windows PowerShell) - Con persistencia de configuración
+# Run (Windows PowerShell) - With configuration persistence
 docker run --rm -it -v "${PWD}:/app" -v "${HOME}/.telelinker:/root/.telelinker" telelinker
 
-# Ejecutar (Windows CMD) - Con persistencia de configuración  
+# Run (Windows CMD) - With configuration persistence  
 docker run --rm -it -v "%cd%:/app" -v "%USERPROFILE%/.telelinker:/root/.telelinker" telelinker
 ```
 
-## ⚙️ Configuración inicial
+## ⚙️ Initial setup
 
-Antes de usar Telelinker, necesitas configurar tu acceso a la API de Telegram:
+Before using Telelinker, you need to configure your Telegram API access:
 
-### 1. Obtener credenciales de Telegram
+### 1. Get Telegram credentials
 
-1. Ve a https://my.telegram.org
-2. Inicia sesión con tu número de teléfono
-3. Haz clic en "API development tools"
-4. Completa el formulario para crear una aplicación
-5. Guarda tu **API ID** y **API HASH**
+1. Go to https://my.telegram.org
+2. Log in with your phone number
+3. Click on "API development tools"
+4. Fill out the form to create an application
+5. Save your **API ID** and **API HASH**
 
-### 2. Configurar Telelinker
+### 2. Configure Telelinker
 
 ```powershell
-# Configurar credenciales
+# Configure credentials
 telelinker setup
 
-# Iniciar sesión en Telegram
+# Log in to Telegram
 telelinker login
 ```
 
-## 🎯 Cómo usar Telelinker
+## 🎯 How to use Telelinker
 
-### Comandos básicos
+### Basic commands
 
-#### 1. Listar tus grupos disponibles
+#### 1. List your available groups
 
+**Basic mode:**
 ```powershell
-# Ver grupos en consola
+# View groups in console
 telelinker groups
 
-# Exportar a CSV
-telelinker groups --format csv --out mis_grupos.csv
+# Export to CSV
+telelinker groups --format csv --out my_groups.csv
 
-# Exportar a JSON
-telelinker groups --format json --out mis_grupos.json
+# Export to JSON
+telelinker groups --format json --out my_groups.json
 ```
 
-#### 2. Extraer enlaces de un grupo específico
-
+**Interactive mode (Recommended):**
 ```powershell
-# Extraer últimos 50 enlaces
-telelinker fetch --group -1001234567890 --limit 50 --format csv --out enlaces.csv
+# Select groups interactively
+telelinker groups --interactive
 
-# Usar username del grupo
-telelinker fetch --group @mi_grupo --limit 100 --format csv --out datos.csv
+# Interactive mode allows selecting output format and file
+telelinker groups --interactive
 ```
 
-#### 3. Procesar múltiples grupos
+#### 2. Extract links from a specific group
 
+**Basic mode:**
 ```powershell
-# Crear archivo con IDs de grupos (uno por línea)
-echo "-1001234567890" > grupos.txt
-echo "@otro_grupo" >> grupos.txt
+# Extract last 50 links
+telelinker fetch --group -1001234567890 --limit 50 --format csv --out links.csv
 
-# Procesar todos los grupos
-telelinker fetch --groups-file grupos.txt --format postgresql --out datos.sql
+# Use group username
+telelinker fetch --group @my_group --limit 100 --format csv --out data.csv
 ```
 
-### Parámetros disponibles
+**Interactive mode (Recommended):**
+```powershell
+# Select groups interactively and extract links
+telelinker fetch --interactive
 
-| Parámetro | Descripción | Ejemplo |
+# Interactive mode allows configuring all parameters
+telelinker fetch --interactive
+```
+
+#### 3. Process multiple groups
+
+**From csv file:**
+```powershell
+# First export groups to CSV
+telelinker groups --format csv --out my_groups.csv
+
+# Process all groups from file
+telelinker fetch --groups-file my_groups.csv --format postgresql --out data.sql
+```
+
+**From JSON file (previously exported):**
+```powershell
+# First export groups to JSON
+telelinker groups --format json --out my_groups.json
+
+# Then use JSON file to process multiple groups
+telelinker fetch --groups-file my_groups.json --limit 200 --format csv --out complete_analysis.csv
+```
+
+**Interactive mode for multiple groups:**
+```powershell
+# Select multiple groups interactively
+telelinker fetch --interactive
+```
+
+### Available parameters
+
+| Parameter | Description | Example |
 |-----------|-------------|---------|
-| `--group` | ID o username del grupo | `-1001234567890` o `@migrupo` |
-| `--groups-file` | Archivo con lista de grupos | `grupos.txt` |
-| `--limit` | Máximo número de enlaces | `100` |
-| `--format` | Formato de salida | `csv`, `postgresql` |
-| `--out` | Archivo de salida | `datos.csv` |
+| `--group` | Group ID or username | `-1001234567890` or `@mygroup` |
+| `--groups-file` | File with group list (CSV or JSON) | `groups.csv` or `my_groups.json` |
+| `--interactive` | Interactive mode for group selection | `--interactive` |
+| `--limit` | Maximum number of links | `100` |
+| `--format` | Output format | `csv`, `postgresql` |
+| `--out` | Output file | `data.csv` |
 
-### Ejemplos prácticos
+### Practical examples
 
+**Quick analysis with interactive mode:**
 ```powershell
-# Análisis rápido de un grupo
-telelinker fetch --group @tecnologia --limit 20 --format csv
-
-# Exportar datos para base de datos
-telelinker fetch --group -1001234567890 --format postgresql --out insertar_datos.sql
-
-# Procesar múltiples grupos con límite
-telelinker fetch --groups-file comunidades.txt --limit 500 --format csv --out analisis_completo.csv
+# Select groups interactively and analyze
+telelinker fetch --interactive
 ```
 
-## 🛠️ Plataformas soportadas
+**Export data for database:**
+```powershell
+# Traditional mode
+telelinker fetch --group -1001234567890 --format postgresql --out insert_data.sql
 
-Telelinker detecta y extrae metadatos de:
+# Interactive mode
+telelinker fetch --interactive
+```
+
+**Complete workflow:**
+```powershell
+# 1. List and select groups interactively
+telelinker groups --interactive
+
+# 2. Process selected groups
+telelinker fetch --groups-file groups_of_interest.json --limit 500 --format csv --out complete_analysis.csv
+
+# 3. Or use direct interactive mode for entire process
+telelinker fetch --interactive
+```
+
+**Specific use cases:**
+```powershell
+# Trend research in multiple communities
+telelinker fetch --interactive
+
+# Content analysis of specific groups
+telelinker fetch --groups-file tech_communities.txt --limit 200 --format csv --out tech_content.csv
+
+# Quick monitoring of recent activity
+telelinker fetch --interactive
+```
+
+## 🛠️ Supported platforms
+
+Telelinker detects and extracts metadata from:
 
 - **📸 Instagram**: Posts, reels, stories
-- **💼 LinkedIn**: Posts, artículos
+- **💼 LinkedIn**: Posts, articles
 - **🎥 YouTube**: Videos, shorts
 - **🎵 TikTok**: Videos
-- **📝 Medium**: Artículos
-- **👨‍💻 Dev.to**: Posts técnicos
+- **📝 Medium**: Articles
+- **👨‍💻 Dev.to**: Technical posts
 
-## 📋 Requisitos del sistema
+## 📋 System requirements
 
 - **Python 3.11+**
-- **Conexión a internet** (para acceder a APIs)
-- **Cuenta de Telegram** con acceso a los grupos que quieres analizar
-- **Credenciales de API de Telegram** (API ID y API HASH)
+- **Internet connection** (to access APIs)
+- **Telegram account** with access to groups you want to analyze
+- **Telegram API credentials** (API ID and API HASH)
 
-### Dependencias opcionales:
-- **Docker** (para ejecución en contenedor)
-- **PostgreSQL** (si usas formato de exportación SQL)
+### Optional dependencies:
+- **Docker** (for container execution)
+- **PostgreSQL** (if using SQL export format)
 
-## 🤝 Contribuir al proyecto
+## 🤝 Contributing to the project
 
-¡Telelinker es un proyecto open source y las contribuciones son muy bienvenidas!
+Telelinker is an open source project and contributions are very welcome!
 
-### ¿Cómo puedes ayudar?
+### How can you help?
 
-- 🐛 **Reportar bugs** - Encuentra errores y ayúdanos a mejorar
-- 💡 **Sugerir funcionalidades** - Propón nuevas características
-- 🔧 **Agregar plataformas** - Implementa soporte para nuevas redes sociales
-- 📝 **Mejorar documentación** - Ayuda a otros usuarios
-- ✨ **Optimizar código** - Mejora el rendimiento y la calidad
+- 🐛 **Report bugs** - Find errors and help us improve
+- 💡 **Suggest features** - Propose new characteristics
+- 🔧 **Add platforms** - Implement support for new social networks
+- 📝 **Improve documentation** - Help other users
+- ✨ **Optimize code** - Improve performance and quality
 
-### Primeros pasos para contribuir
+### Getting started with contributions
 
-1. **Lee la guía**: Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para instrucciones detalladas
-2. **Revisa el código de conducta**: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-3. **Explora issues**: Busca [issues abiertos](../../issues) para empezar
-4. **Haz fork del repo**: Crea tu propia copia para trabajar
-5. **Envía un PR**: Comparte tus mejoras con la comunidad
+1. **Read the guide**: Check [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions
+2. **Review code of conduct**: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+3. **Explore issues**: Look for [open issues](../../issues) to get started
+4. **Fork the repo**: Create your own copy to work on
+5. **Submit a PR**: Share your improvements with the community
 
-### Desarrollo local
+### Local development
 
 ```bash
-# Fork y clona el repositorio
-git clone https://github.com/tu-usuario/telelinker.git
+# Fork and clone the repository
+git clone https://github.com/your-username/telelinker.git
 cd telelinker
 
-# Configura el entorno
+# Set up environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# Crea una rama para tu feature
-git checkout -b feature/mi-nueva-funcionalidad
+# Create a branch for your feature
+git checkout -b feature/my-new-feature
 
-# ¡Empieza a programar! 🚀
+# Start coding! 🚀
 ```
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto está licenciado bajo la **Licencia MIT**. Esto significa que puedes:
+This project is licensed under the **MIT License**. This means you can:
 
-- ✅ Usar el código comercialmente
-- ✅ Modificar el código
-- ✅ Distribuir el código
-- ✅ Usar el código privadamente
+- ✅ Use the code commercially
+- ✅ Modify the code
+- ✅ Distribute the code
+- ✅ Use the code privately
 
-Ver [LICENSE](LICENSE) para más detalles.
+See [LICENSE](LICENSE) for more details.
 
-## 🆘 Soporte y ayuda
+## 🆘 Support and help
 
-¿Necesitas ayuda? Aquí tienes varias opciones:
+Need help? Here are several options:
 
-- 📋 **Issues**: [Reportar bugs o solicitar features](../../issues)
-- 💬 **Discusiones**: [Preguntas generales y ayuda](../../discussions)
-- 📖 **Documentación**: [Guía completa de contribución](CONTRIBUTING.md)
+- 📋 **Issues**: [Report bugs or request features](../../issues)
+- 💬 **Discussions**: [General questions and help](../../discussions)
+- 📖 **Documentation**: [Complete contribution guide](CONTRIBUTING.md)
 
-## ⚠️ Consideraciones importantes
+## ⚠️ Important considerations
 
-- **Privacidad**: Solo puedes extraer enlaces de grupos donde eres miembro
-- **Rate limiting**: Respeta los límites de la API de Telegram
-- **Términos de servicio**: Asegúrate de cumplir con los ToS de las plataformas
-- **Datos sensibles**: Nunca compartas tu API HASH públicamente
+- **Privacy**: You can only extract links from groups where you are a member
+- **Rate limiting**: Respect Telegram API limits
+- **Terms of service**: Make sure to comply with platform ToS
+- **Sensitive data**: Never share your API HASH publicly
 
 ---
 
-**¿Te gusta Telelinker?** ⭐ ¡Dale una estrella al repositorio y compártelo con otros desarrolladores!
+**Like Telelinker?** ⭐ Give the repository a star and share it with other developers!
