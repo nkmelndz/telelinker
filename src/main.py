@@ -2,6 +2,7 @@ import re
 from src.services.telegram_service import TelegramService
 from src.scrapers import SCRAPERS
 import argparse
+from src.cli.commands import report  # Import the new subcommand
 
 
 
@@ -34,6 +35,10 @@ def main():
     fetch_parser.add_argument("-o", "--out", type=str, required=False, help="Archivo de salida")
     fetch_parser.add_argument("-i", "--interactive", action="store_true", help="Modo interactivo para elegir grupos y exportar")
 
+    # Add 'report' subcommand
+    report_parser = subparsers.add_parser("report", help="Generate reports from scraped data")
+    report_parser.add_argument("--file", required=True, help="Path to the CSV file to process")
+
     args = parser.parse_args()
 
     if args.command == "setup":
@@ -51,6 +56,8 @@ def main():
     elif args.command == "fetch":
         from src.cli.commands import fetch
         fetch.run(args)
+    elif args.command == "report":
+        report.run(args)  # Placeholder for the report logic
     else:
         from src.cli.commands import welcome
         welcome.print_banner_and_help(parser)

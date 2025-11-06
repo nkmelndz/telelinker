@@ -5,6 +5,6 @@
     "license": "MIT",
     "url": "https://github.com/nkmelndz/telelinker/releases/download/v1.5.0/telelinker.exe",
     "hash": "C2D156810AA2556ADD55C80674BEFAABBEBE85528F1C9D0885298484E5AC88A5",
-    "depends": ["googlechrome", "chromedriver"],
+    "depends": ["googlechrome"],
     "bin": "telelinker.exe"
 }
