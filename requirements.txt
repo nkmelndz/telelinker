@@ -8,5 +8,7 @@ yt-dlp
 ffmpeg
 InquirerPy
 rich
-streamlit
+dash
+plotly
 pandas
+waitress

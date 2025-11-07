@@ -1,39 +1,30 @@
 import os
-
-
-def configure_streamlit():
-    """
-    Ensure Streamlit configuration is set to disable telemetry and remove the Deploy button.
-    """
-    config_dir = os.path.expanduser("~/.streamlit")
-    os.makedirs(config_dir, exist_ok=True)
-    config_path = os.path.join(config_dir, "config.toml")
-    with open(config_path, "w") as config_file:
-        config_file.write(
-            "[browser]\n"
-            "gatherUsageStats = false\n"
-            "[server]\n"
-            "enableXsrfProtection = true\n"
-            "enableCORS = false\n"
-        )
-
-
-# Ensure Streamlit is configured before running the dashboard
-configure_streamlit()
+from rich.console import Console
 
 
 def run(args):
     """
-    Launch the Streamlit dashboard and pass the --file argument.
+    Launch the Plotly Dash dashboard passing the --file argument.
 
     Args:
-        args: Parsed arguments from the CLI, including the '--file' argument.
+        args: CLI arguments, including '--file'.
     """
     file_path = args.file
 
+    console = Console()
+
     if not os.path.exists(file_path):
-        print(f"Error: El archivo '{file_path}' no existe.")
+        console.print(f"[bold red]Error:[/bold red] File '[yellow]{file_path}[/yellow]' does not exist.")
         return
 
-    # Launch Streamlit with the provided file
-    os.system(f"streamlit run src/dashboards/report_dashboard.py -- --file {file_path}")
+    # Lanzar el dashboard de Dash como módulo de Python
+    # Usamos puerto 8501 para mantener consistencia con el uso previo
+    cmd = f"python -m src.dashboards.report_dashboard --file \"{file_path}\" --host 127.0.0.1 --port 8501"
+
+    console.print("[bold cyan]Opening dashboard (Dash)[/bold cyan] at [bright_cyan]http://127.0.0.1:8501/[/bright_cyan] …")
+    console.print("[dim]Press [bold]Ctrl+C[/bold] to exit.[/dim]")
+
+    try:
+        os.system(cmd)
+    except KeyboardInterrupt:
+        console.print("\n[bold yellow]Server stopped[/bold yellow]. Goodbye! ✨")
