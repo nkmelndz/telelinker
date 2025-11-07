@@ -52,7 +52,7 @@ def build_app(df: pd.DataFrame) -> Dash:
         else []
     )
 
-    # Layout principal: filtro de fechas debajo del subtítulo de gráficos generales y sin efecto en la sección por plataforma
+    # Layout principal: filtro de fechas debajo del subtítulo de gráficos generales y un filtro específico en la sección por plataforma
     app.layout = html.Div(
         [
             html.H2("Telelinker Report (Dash)"),
@@ -68,7 +68,7 @@ def build_app(df: pd.DataFrame) -> Dash:
             ),
             html.Hr(),
             # Sector por plataforma
-            build_platform_specific_layout(plataformas),
+            build_platform_specific_layout(plataformas, fecha_min, fecha_max),
             # Almacenar datos
             dcc.Store(id="data-store", data=df.to_dict("records")),
         ],
@@ -113,11 +113,26 @@ def build_app(df: pd.DataFrame) -> Dash:
     @app.callback(
         Output("top-authors-by-platform", "figure"),
         Input("platform-select", "value"),
+        Input("platform-date-range", "start_date"),
+        Input("platform-date-range", "end_date"),
         Input("data-store", "data"),
     )
-    def update_top_authors(selected_platform, data_records):
+    def update_top_authors(selected_platform, start_date, end_date, data_records):
         dff = pd.DataFrame(data_records)
-        # No aplicar filtro de fechas aquí: solo depende de plataforma y datos
+        if "fecha" in dff.columns:
+            dff["fecha"] = pd.to_datetime(dff["fecha"], errors="coerce")
+        if start_date:
+            try:
+                start = pd.to_datetime(start_date)
+                dff = dff[(dff["fecha"].isna()) | (dff["fecha"] >= start)]
+            except Exception:
+                pass
+        if end_date:
+            try:
+                end = pd.to_datetime(end_date)
+                dff = dff[(dff["fecha"].isna()) | (dff["fecha"] <= end)]
+            except Exception:
+                pass
         return top_authors_figure(dff, selected_platform)
 
     return app

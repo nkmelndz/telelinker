@@ -1,26 +1,41 @@
 import pandas as pd
 from dash import html, dcc
 import plotly.express as px
+from datetime import date
+from .filters import build_date_filter
 
 
-def build_platform_specific_layout(plataformas: list[str]) -> html.Div:
-    """Sección por plataforma: selector y gráfico de top autores por URLs subidas."""
+def build_platform_specific_layout(plataformas: list[str], min_date: date | None, max_date: date | None) -> html.Div:
+    """Sección por plataforma: selector, filtro de fecha y gráfico de top autores por URLs subidas."""
+    sorted_plats = sorted(plataformas)
+    default_value = sorted_plats[0] if sorted_plats else None
     return html.Div(
         [
             html.H3("Por plataforma"),
             html.Div(
                 [
-                    html.Label("Plataforma"),
-                    dcc.Dropdown(
-                        id="platform-select",
-                        options=[{"label": p, "value": p} for p in sorted(plataformas)],
-                        value=None,
-                        placeholder="Selecciona una plataforma",
-                        clearable=True,
-                        searchable=True,
+                    html.Div(
+                        [
+                            html.Label("Plataforma"),
+                            dcc.Dropdown(
+                                id="platform-select",
+                                options=[{"label": p, "value": p} for p in sorted_plats],
+                                value=default_value,
+                                placeholder="Selecciona una plataforma",
+                                clearable=True,
+                                searchable=True,
+                            ),
+                        ]
+                    ),
+                    html.Div(
+                        [
+                            html.Label("Filtro por fechas"),
+                            build_date_filter(min_date, max_date, filter_id="platform-date-range"),
+                        ]
                     ),
                 ],
                 className="filter-bar",
+                style={"display": "flex", "gap": "12px", "alignItems": "flex-end", "flexWrap": "wrap"},
             ),
             html.Div(className="card", children=[dcc.Graph(id="top-authors-by-platform")]),
         ],
