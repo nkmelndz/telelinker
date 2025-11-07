@@ -3,79 +3,122 @@ import logging
 import flask.cli as flask_cli
 import pandas as pd
 from dash import Dash, dcc, html, Input, Output
-from dash import dash_table
 import plotly.express as px
+
+from .components.filters import build_date_filter
+from .components.general import (
+    build_general_layout,
+    likes_sum_figure,
+    comments_sum_figure,
+    url_count_figure,
+    time_trend_figure,
+)
+from .components.platform_specific import (
+    build_platform_specific_layout,
+    top_authors_figure,
+)
 
 
 def build_app(df: pd.DataFrame) -> Dash:
     app = Dash(__name__)
+    # Tema de gráficos consistente
+    try:
+        px.defaults.template = "plotly_white"
+        px.defaults.color_discrete_sequence = px.colors.qualitative.Set2
+    except Exception:
+        pass
 
+    # Normalizar/parsear fecha_publicacion a datetime (columna auxiliar 'fecha')
+    if "fecha_publicacion" in df.columns:
+        # Intento robusto de parseo a datetime
+        df = df.copy()
+        df["fecha"] = pd.to_datetime(df["fecha_publicacion"], errors="coerce")
+    else:
+        df = df.copy()
+        df["fecha"] = pd.NaT
+
+    # Rango de fechas para el DatePickerRange
+    fecha_min = (
+        df["fecha"].min().date() if df["fecha"].notna().any() else None
+    )
+    fecha_max = (
+        df["fecha"].max().date() if df["fecha"].notna().any() else None
+    )
+
+    # Opciones de plataformas
     plataformas = (
         df["plataforma"].fillna("Desconocido").astype(str).unique().tolist()
         if "plataforma" in df.columns
         else []
     )
 
+    # Layout principal: filtro de fechas debajo del subtítulo de gráficos generales y sin efecto en la sección por plataforma
     app.layout = html.Div(
         [
             html.H2("Telelinker Report (Dash)"),
-            html.Div(
-                [
-                    html.Label("Filtrar por plataforma"),
-                    dcc.Dropdown(
-                        id="platform-filter",
-                        options=[{"label": p, "value": p} for p in sorted(plataformas)],
-                        value=None,
-                        placeholder="Selecciona una plataforma (opcional)",
-                        clearable=True,
-                    ),
-                ],
-                style={"maxWidth": "480px"},
+            # Sector general con filtro de fechas embebido bajo el subtítulo
+            build_general_layout(
+                html.Div(
+                    [
+                        html.Label("Filtro por fechas"),
+                        build_date_filter(fecha_min, fecha_max),
+                    ],
+                    className="filter-bar",
+                )
             ),
             html.Hr(),
-            html.H4("Vista previa de los datos (primeras 20 filas)"),
-            dash_table.DataTable(
-                id="data-preview",
-                columns=[{"name": c, "id": c} for c in df.columns],
-                data=df.head(20).to_dict("records"),
-                page_size=20,
-                style_table={"overflowX": "auto"},
-            ),
-            html.Hr(),
-            html.H4("Recuento de URLs por plataforma"),
-            dcc.Graph(id="platform-count-graph"),
+            # Sector por plataforma
+            build_platform_specific_layout(plataformas),
+            # Almacenar datos
             dcc.Store(id="data-store", data=df.to_dict("records")),
         ],
-        style={"padding": "16px", "fontFamily": "Arial, sans-serif"},
+        className="dashboard",
     )
 
     @app.callback(
-        Output("platform-count-graph", "figure"),
-        Input("platform-filter", "value"),
+        Output("likes-sum-by-platform", "figure"),
+        Output("comments-sum-by-platform", "figure"),
+        Output("url-count-by-platform", "figure"),
+        Output("time-trend-by-platform", "figure"),
+        Input("date-range", "start_date"),
+        Input("date-range", "end_date"),
         Input("data-store", "data"),
     )
-    def update_graph(selected_platform, data_records):
+    def update_general_charts(start_date, end_date, data_records):
         dff = pd.DataFrame(data_records)
-        if selected_platform:
-            dff = dff[dff["plataforma"].astype(str) == selected_platform]
+        # Asegurar columna 'fecha' en datetime
+        if "fecha" in dff.columns:
+            dff["fecha"] = pd.to_datetime(dff["fecha"], errors="coerce")
+        # Filtrado por rango de fechas si corresponde
+        if start_date:
+            try:
+                start = pd.to_datetime(start_date)
+                dff = dff[(dff["fecha"].isna()) | (dff["fecha"] >= start)]
+            except Exception:
+                pass
+        if end_date:
+            try:
+                end = pd.to_datetime(end_date)
+                dff = dff[(dff["fecha"].isna()) | (dff["fecha"] <= end)]
+            except Exception:
+                pass
 
-        if "plataforma" in dff.columns and "url" in dff.columns and not dff.empty:
-            counts = (
-                dff.groupby("plataforma")["url"].count().reset_index(name="conteo")
-            )
-            fig = px.bar(
-                counts,
-                x="plataforma",
-                y="conteo",
-                title="URLs por plataforma",
-                text="conteo",
-            )
-            fig.update_layout(margin=dict(l=20, r=20, t=50, b=20))
-            fig.update_traces(textposition="outside")
-            return fig
-        else:
-            # Gráfico vacío amigable
-            return px.bar(title="Sin datos para graficar")
+        return (
+            likes_sum_figure(dff),
+            comments_sum_figure(dff),
+            url_count_figure(dff),
+            time_trend_figure(dff),
+        )
+
+    @app.callback(
+        Output("top-authors-by-platform", "figure"),
+        Input("platform-select", "value"),
+        Input("data-store", "data"),
+    )
+    def update_top_authors(selected_platform, data_records):
+        dff = pd.DataFrame(data_records)
+        # No aplicar filtro de fechas aquí: solo depende de plataforma y datos
+        return top_authors_figure(dff, selected_platform)
 
     return app
 
