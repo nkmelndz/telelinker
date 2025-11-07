@@ -43,7 +43,7 @@ scoop update telelinker
 **⚠️ System requirements:**
 ```bash
 # Windows (Scoop)
-scoop install googlechrome chromedriver
+scoop install googlechrome
 
 # Linux/macOS
 # Chrome/Chromium + ChromeDriver

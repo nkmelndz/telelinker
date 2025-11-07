@@ -34,7 +34,7 @@ Before setting up the environment, install system dependencies:
 
 ```bash
 # Windows (Scoop - recommended)
-scoop install googlechrome chromedriver ffmpeg
+scoop install googlechrome
 
 # Linux (Ubuntu/Debian)
 sudo apt-get update

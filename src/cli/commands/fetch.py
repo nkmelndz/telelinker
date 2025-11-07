@@ -13,6 +13,7 @@ from src.utils.normalize_date import normalize_date
 from src.utils.parse_count import _parse_count as parse_count
 from contextlib import contextmanager
 from InquirerPy import inquirer
+from src.utils.selenium_env import preflight_check
 
 @contextmanager
 def group_progress(limit, group):
@@ -256,6 +257,8 @@ def export_to_postgresql(groups, tg_service, limit, out_file):
 def run(args):
     """Función principal que ejecuta el comando fetch."""
     try:
+        # Advertencia temprana si hay chromedriver incompatible en PATH
+        preflight_check()
         # Cargar configuración
         cfg, config_dir = load_config()
         config_values = get_config_values(cfg)

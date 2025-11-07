@@ -2,9 +2,11 @@ telethon
 python-dotenv
 requests
 beautifulsoup4
-selenium
+selenium>=4.12
 psycopg2-binary
 yt-dlp
 ffmpeg
 InquirerPy
 rich
+streamlit
+pandas
