@@ -103,9 +103,9 @@ def top_authors_likes_figure(df: pd.DataFrame, plataforma: str | None):
         .sum()
         .reset_index(name="likes_sum")
     )
+    # Seleccionar los 10 autores con mayor suma de likes, luego ordenar ascendente para visualización
+    agg = agg.sort_values("likes_sum", ascending=False).head(10)
     agg = agg.sort_values("likes_sum", ascending=True)
-    # Limitar a primeros 20 (orden ascendente)
-    agg = agg.head(20)
 
     fig = px.bar(
         agg,
@@ -114,12 +114,14 @@ def top_authors_likes_figure(df: pd.DataFrame, plataforma: str | None):
         orientation="h",
         title=f"Top autores por likes en {plataforma}",
         text="likes_sum",
+        color="autor_contenido",
     )
     fig.update_traces(textposition="outside")
     fig.update_layout(
         margin=dict(l=20, r=20, t=50, b=20),
         yaxis_title="Autor",
         yaxis={"categoryorder": "array", "categoryarray": agg["autor_contenido"].tolist()},
+        showlegend=False,
     )
     return fig
 
@@ -147,7 +149,9 @@ def top_authors_comments_figure(df: pd.DataFrame, plataforma: str | None):
         .sum()
         .reset_index(name="comentarios_sum")
     )
-    agg = agg.sort_values("comentarios_sum", ascending=True).head(20)
+    # Seleccionar los 10 autores con mayor suma de comentarios, luego ordenar ascendente para visualización
+    agg = agg.sort_values("comentarios_sum", ascending=False).head(10)
+    agg = agg.sort_values("comentarios_sum", ascending=True)
 
     fig = px.bar(
         agg,
@@ -156,12 +160,14 @@ def top_authors_comments_figure(df: pd.DataFrame, plataforma: str | None):
         orientation="h",
         title=f"Top autores por comentarios en {plataforma}",
         text="comentarios_sum",
+        color="autor_contenido",
     )
     fig.update_traces(textposition="outside")
     fig.update_layout(
         margin=dict(l=20, r=20, t=50, b=20),
         yaxis_title="Autor",
         yaxis={"categoryorder": "array", "categoryarray": agg["autor_contenido"].tolist()},
+        showlegend=False,
     )
     return fig
 
@@ -186,6 +192,8 @@ def engagement_trend_figure(df: pd.DataFrame, plataforma: str | None, period: st
 
     dff["likes"] = pd.to_numeric(dff.get("likes", 0), errors="coerce").fillna(0)
     dff["comentarios"] = pd.to_numeric(dff.get("comentarios", 0), errors="coerce").fillna(0)
+    dff["compartidos"] = pd.to_numeric(dff.get("compartidos", 0), errors="coerce").fillna(0)
+    dff["visitas"] = pd.to_numeric(dff.get("visitas", 0), errors="coerce").fillna(0)
 
     # Selección de agregación
     period = (period or "diaria").lower()
@@ -200,12 +208,12 @@ def engagement_trend_figure(df: pd.DataFrame, plataforma: str | None, period: st
         dff[key] = dff["fecha"].dt.date
 
     agg = (
-        dff.groupby(key, dropna=False)[["likes", "comentarios"]]
+        dff.groupby(key, dropna=False)[["likes", "comentarios", "compartidos", "visitas"]]
         .sum()
         .reset_index()
     )
     # Formato largo para dos líneas
-    long_df = agg.melt(id_vars=[key], value_vars=["likes", "comentarios"], var_name="métrica", value_name="valor")
+    long_df = agg.melt(id_vars=[key], value_vars=["likes", "comentarios", "compartidos", "visitas"], var_name="métrica", value_name="valor")
 
     fig = px.line(
         long_df,
