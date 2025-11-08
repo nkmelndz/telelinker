@@ -38,6 +38,9 @@ def build_platform_specific_layout(plataformas: list[str], min_date: date | None
                 style={"display": "flex", "gap": "12px", "alignItems": "flex-end", "flexWrap": "wrap"},
             ),
             html.Div(className="card", children=[dcc.Graph(id="top-authors-by-platform")]),
+            html.Div(className="card", children=[dcc.Graph(id="top-authors-likes-by-platform")]),
+            html.Div(className="card", children=[dcc.Graph(id="top-authors-comments-by-platform")]),
+            html.Div(className="card", children=[dcc.Graph(id="engagement-trend-by-platform")]),
         ],
         className="section",
     )
@@ -74,4 +77,143 @@ def top_authors_figure(df: pd.DataFrame, plataforma: str | None):
         title=f"URLs por autor en {plataforma} (Treemap)",
     )
     fig.update_layout(margin=dict(l=20, r=20, t=50, b=20))
+    return fig
+
+
+def top_authors_likes_figure(df: pd.DataFrame, plataforma: str | None):
+    """Barra horizontal: autores ordenados por suma de likes en la plataforma.
+    Muestra Top autores por likes (suma) para la plataforma seleccionada.
+    """
+    if plataforma is None:
+        return px.bar(title="Seleccione una plataforma para ver top autores por likes")
+    if df.empty or "plataforma" not in df.columns or "autor_contenido" not in df.columns or "likes" not in df.columns:
+        return px.bar(title="Sin datos suficientes para graficar top autores por likes")
+
+    dff = df.copy()
+    dff["plataforma"] = dff["plataforma"].astype(str).fillna("Desconocido")
+    dff["autor_contenido"] = dff["autor_contenido"].astype(str).fillna("Desconocido")
+    dff["likes"] = pd.to_numeric(dff["likes"], errors="coerce").fillna(0)
+
+    dff = dff[dff["plataforma"] == plataforma]
+    if dff.empty:
+        return px.bar(title=f"Sin datos para la plataforma '{plataforma}'")
+
+    agg = (
+        dff.groupby(["autor_contenido"], dropna=False)["likes"]
+        .sum()
+        .reset_index(name="likes_sum")
+    )
+    agg = agg.sort_values("likes_sum", ascending=True)
+    # Limitar a primeros 20 (orden ascendente)
+    agg = agg.head(20)
+
+    fig = px.bar(
+        agg,
+        x="likes_sum",
+        y="autor_contenido",
+        orientation="h",
+        title=f"Top autores por likes en {plataforma}",
+        text="likes_sum",
+    )
+    fig.update_traces(textposition="outside")
+    fig.update_layout(
+        margin=dict(l=20, r=20, t=50, b=20),
+        yaxis_title="Autor",
+        yaxis={"categoryorder": "array", "categoryarray": agg["autor_contenido"].tolist()},
+    )
+    return fig
+
+
+def top_authors_comments_figure(df: pd.DataFrame, plataforma: str | None):
+    """Barra horizontal: autores ordenados por suma de comentarios en la plataforma.
+    Limita a Top 15 para legibilidad.
+    """
+    if plataforma is None:
+        return px.bar(title="Seleccione una plataforma para ver top autores por comentarios")
+    if df.empty or "plataforma" not in df.columns or "autor_contenido" not in df.columns or "comentarios" not in df.columns:
+        return px.bar(title="Sin datos suficientes para graficar top autores por comentarios")
+
+    dff = df.copy()
+    dff["plataforma"] = dff["plataforma"].astype(str).fillna("Desconocido")
+    dff["autor_contenido"] = dff["autor_contenido"].astype(str).fillna("Desconocido")
+    dff["comentarios"] = pd.to_numeric(dff["comentarios"], errors="coerce").fillna(0)
+
+    dff = dff[dff["plataforma"] == plataforma]
+    if dff.empty:
+        return px.bar(title=f"Sin datos para la plataforma '{plataforma}'")
+
+    agg = (
+        dff.groupby(["autor_contenido"], dropna=False)["comentarios"]
+        .sum()
+        .reset_index(name="comentarios_sum")
+    )
+    agg = agg.sort_values("comentarios_sum", ascending=True).head(20)
+
+    fig = px.bar(
+        agg,
+        x="comentarios_sum",
+        y="autor_contenido",
+        orientation="h",
+        title=f"Top autores por comentarios en {plataforma}",
+        text="comentarios_sum",
+    )
+    fig.update_traces(textposition="outside")
+    fig.update_layout(
+        margin=dict(l=20, r=20, t=50, b=20),
+        yaxis_title="Autor",
+        yaxis={"categoryorder": "array", "categoryarray": agg["autor_contenido"].tolist()},
+    )
+    return fig
+
+
+def engagement_trend_figure(df: pd.DataFrame, plataforma: str | None, period: str | None = "semanal"):
+    """Tendencia temporal de engagement: líneas separadas de likes y comentarios sumados por día.
+    Filtra por plataforma seleccionada y usa la columna 'fecha' para agrupar por día.
+    """
+    if plataforma is None:
+        return px.line(title="Seleccione una plataforma para ver la tendencia de engagement")
+    if df.empty or "plataforma" not in df.columns or "fecha" not in df.columns:
+        return px.line(title="Sin datos suficientes para graficar tendencia de engagement")
+
+    dff = df.copy()
+    dff["plataforma"] = dff["plataforma"].astype(str).fillna("Desconocido")
+    dff = dff[dff["plataforma"] == plataforma]
+
+    dff["fecha"] = pd.to_datetime(dff["fecha"], errors="coerce")
+    dff = dff[dff["fecha"].notna()]
+    if dff.empty:
+        return px.line(title=f"Sin fechas válidas para graficar en '{plataforma}'")
+
+    dff["likes"] = pd.to_numeric(dff.get("likes", 0), errors="coerce").fillna(0)
+    dff["comentarios"] = pd.to_numeric(dff.get("comentarios", 0), errors="coerce").fillna(0)
+
+    # Selección de agregación
+    period = (period or "diaria").lower()
+    if period == "semanal":
+        key = "semana"
+        dff[key] = dff["fecha"].dt.to_period("W").apply(lambda p: p.start_time.date())
+    elif period == "mensual":
+        key = "mes"
+        dff[key] = dff["fecha"].dt.to_period("M").apply(lambda p: p.start_time.date())
+    else:
+        key = "dia"
+        dff[key] = dff["fecha"].dt.date
+
+    agg = (
+        dff.groupby(key, dropna=False)[["likes", "comentarios"]]
+        .sum()
+        .reset_index()
+    )
+    # Formato largo para dos líneas
+    long_df = agg.melt(id_vars=[key], value_vars=["likes", "comentarios"], var_name="métrica", value_name="valor")
+
+    fig = px.line(
+        long_df,
+        x=key,
+        y="valor",
+        color="métrica",
+        markers=True,
+        title=f"Tendencia temporal de engagement en {plataforma} ({period})",
+    )
+    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), legend_title_text="Métrica")
     return fig

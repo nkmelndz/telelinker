@@ -16,6 +16,9 @@ from .components.general import (
 from .components.platform_specific import (
     build_platform_specific_layout,
     top_authors_figure,
+    top_authors_likes_figure,
+    top_authors_comments_figure,
+    engagement_trend_figure,
 )
 
 
@@ -112,6 +115,9 @@ def build_app(df: pd.DataFrame) -> Dash:
 
     @app.callback(
         Output("top-authors-by-platform", "figure"),
+        Output("top-authors-likes-by-platform", "figure"),
+        Output("top-authors-comments-by-platform", "figure"),
+        Output("engagement-trend-by-platform", "figure"),
         Input("platform-select", "value"),
         Input("platform-date-range", "start_date"),
         Input("platform-date-range", "end_date"),
@@ -133,7 +139,12 @@ def build_app(df: pd.DataFrame) -> Dash:
                 dff = dff[(dff["fecha"].isna()) | (dff["fecha"] <= end)]
             except Exception:
                 pass
-        return top_authors_figure(dff, selected_platform)
+        return (
+            top_authors_figure(dff, selected_platform),
+            top_authors_likes_figure(dff, selected_platform),
+            top_authors_comments_figure(dff, selected_platform),
+            engagement_trend_figure(dff, selected_platform),
+        )
 
     return app
 

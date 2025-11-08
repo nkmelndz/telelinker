@@ -90,8 +90,8 @@ def url_count_figure(df: pd.DataFrame):
 
 
 def time_trend_figure(df: pd.DataFrame):
-    """Línea temporal del recuento de URLs por plataforma.
-    Agrega por día y colorea por plataforma.
+    """Línea temporal semanal del recuento de URLs por plataforma.
+    Agrega por semana (inicio de semana) y colorea por plataforma.
     """
     if df.empty or "plataforma" not in df.columns or "url" not in df.columns:
         return px.line(title="Sin datos de 'url' para graficar tendencia temporal")
@@ -106,16 +106,17 @@ def time_trend_figure(df: pd.DataFrame):
     if dff.empty:
         return px.line(title="Sin fechas válidas para graficar tendencia temporal")
 
-    dff["dia"] = dff["fecha"].dt.date
-    agg = dff.groupby(["dia", "plataforma"], dropna=False)["url"].count().reset_index(name="conteo")
+    key = "semana"
+    dff[key] = dff["fecha"].dt.to_period("W").apply(lambda p: p.start_time.date())
+    agg = dff.groupby([key, "plataforma"], dropna=False)["url"].count().reset_index(name="conteo")
 
     fig = px.line(
         agg,
-        x="dia",
+        x=key,
         y="conteo",
         color="plataforma",
         markers=True,
-        title="Tendencia temporal de URLs por plataforma",
+        title="Tendencia temporal semanal de URLs por plataforma",
     )
     fig.update_layout(margin=dict(l=20, r=20, t=50, b=20))
     return fig
