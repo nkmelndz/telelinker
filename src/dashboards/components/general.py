@@ -17,9 +17,9 @@ def build_general_layout(date_filter: html.Div | None = None) -> html.Div:
             ),
             html.Div(
                 [
-                    html.Div(className="card", children=[dcc.Graph(id="url-count-by-platform")]),
-                    html.Div(className="card", children=[dcc.Graph(id="likes-sum-by-platform")]),
-                    html.Div(className="card", children=[dcc.Graph(id="comments-sum-by-platform")]),
+                    html.Div(className="card", children=[dcc.Graph(id="url-count-by-platform", style={"height": "360px"})]),
+                    html.Div(className="card", children=[dcc.Graph(id="likes-sum-by-platform", style={"height": "360px"})]),
+                    html.Div(className="card", children=[dcc.Graph(id="comments-sum-by-platform", style={"height": "360px"})]),
                 ],
                 className="cards",
             ),
@@ -37,15 +37,16 @@ def likes_sum_figure(df: pd.DataFrame):
         df.assign(likes=pd.to_numeric(df["likes"], errors="coerce").fillna(0))
         .groupby("plataforma", dropna=False)["likes"].sum().reset_index()
     )
-    agg["plataforma_str"] = agg["plataforma"].astype(str)
+    # Asegurar que la etiqueta sea la columna 'plataforma'
+    agg["plataforma"] = agg["plataforma"].astype(str)
     fig = px.pie(
         agg,
-        names="plataforma_str",
+        names="plataforma",
         values="likes",
         title="Suma de likes por plataforma (Pie)",
     )
     fig.update_traces(textinfo="label+value+percent")
-    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), legend_title_text="")
     return fig
 
 
@@ -56,16 +57,16 @@ def comments_sum_figure(df: pd.DataFrame):
         df.assign(comentarios=pd.to_numeric(df["comentarios"], errors="coerce").fillna(0))
         .groupby("plataforma", dropna=False)["comentarios"].sum().reset_index()
     )
-    agg["plataforma_str"] = agg["plataforma"].astype(str)
+    agg["plataforma"] = agg["plataforma"].astype(str)
     fig = px.pie(
         agg,
-        names="plataforma_str",
+        names="plataforma",
         values="comentarios",
         title="Suma de comentarios por plataforma (Donut)",
         hole=0.45,
     )
     fig.update_traces(textinfo="label+value+percent")
-    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), legend_title_text="")
     return fig
 
 
@@ -73,19 +74,19 @@ def url_count_figure(df: pd.DataFrame):
     if df.empty or "plataforma" not in df.columns or "url" not in df.columns:
         return px.bar(title="Sin datos de 'url' para graficar")
     agg = df.groupby("plataforma", dropna=False)["url"].count().reset_index(name="conteo")
-    agg["plataforma_str"] = agg["plataforma"].astype(str)
-    plataformas = agg["plataforma_str"].unique().tolist()
+    agg["plataforma"] = agg["plataforma"].astype(str)
+    plataformas = agg["plataforma"].unique().tolist()
     color_map = _get_platform_color_map(plataformas)
     fig = px.bar(
         agg,
-        x="plataforma_str",
+        x="plataforma",
         y="conteo",
         title="Recuento de URLs por plataforma",
         text="conteo",
-        color="plataforma_str",
+        color="plataforma",
     )
     fig.update_traces(textposition="outside")
-    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), legend_title_text="")
     return fig
 
 
@@ -118,7 +119,7 @@ def time_trend_figure(df: pd.DataFrame):
         markers=True,
         title="Tendencia temporal semanal de URLs por plataforma",
     )
-    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), legend_title_text="")
     return fig
 
 
