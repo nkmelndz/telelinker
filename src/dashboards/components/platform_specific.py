@@ -22,20 +22,24 @@ def build_platform_specific_layout(plataformas: list[str], min_date: date | None
                                 options=[{"label": p, "value": p} for p in sorted_plats],
                                 value=default_value,
                                 placeholder="Selecciona una plataforma",
-                                clearable=True,
-                                searchable=True,
+                                clearable=False,
+                                searchable=False,
+                                className="platform-dropdown",
+                                style={"width": "100%"},
                             ),
-                        ]
+                        ],
+                        style={"flex": "0 0 30%"},
                     ),
                     html.Div(
                         [
                             html.Label("Filtro por fechas"),
                             build_date_filter(min_date, max_date, filter_id="platform-date-range"),
-                        ]
+                        ],
+                        style={"flex": "1 0 70%"},
                     ),
                 ],
                 className="filter-bar",
-                style={"display": "flex", "gap": "12px", "alignItems": "flex-end", "flexWrap": "wrap"},
+                style={"display": "flex", "gap": "12px", "alignItems": "flex-end", "flexWrap": "nowrap"},
             ),
             html.Div(className="card", children=[dcc.Graph(id="top-authors-by-platform")]),
             html.Div(

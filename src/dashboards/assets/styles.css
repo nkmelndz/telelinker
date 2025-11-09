@@ -42,6 +42,7 @@ html, body {
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
   padding: 12px;
+  margin-bottom: 16px; /* separación vertical entre gráficos */
 }
 
 /* Filters */
@@ -60,6 +61,32 @@ html, body {
 /* DatePicker tweaks (Dash uses react-dates classes) */
 .DateRangePicker, .DateInput, .DateInput_input {
   font-size: 14px;
+}
+
+/* Altura consistente de controles de filtros */
+.DateRangePickerInput {
+  height: 36px;
+}
+.DateInput_input {
+  height: 36px;
+  line-height: 36px;
+  padding: 6px 10px;
+}
+
+/* Dropdown de plataforma: ajusta ancho y altura de control (react-select) */
+.platform-dropdown {
+  min-width: 180px; /* reducido al 50% del ancho previo */
+}
+/* Compatibilidad con versiones: estilos para react-select y dash-dropdown */
+.platform-dropdown .Select-control {
+  min-height: 36px;
+  height: 36px;
+}
+.platform-dropdown .Select--single > .Select-control .Select-value {
+  line-height: 36px;
+}
+.platform-dropdown .dash-dropdown {
+  min-height: 36px;
 }
 
 /* Plotly chart titles */
