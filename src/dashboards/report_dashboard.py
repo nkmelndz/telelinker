@@ -19,11 +19,17 @@ from .components.platform_specific import (
     top_authors_likes_figure,
     top_authors_comments_figure,
     engagement_trend_figure,
+    top_posts_engagement_figure,
 )
 
 
 def build_app(df: pd.DataFrame) -> Dash:
     app = Dash(__name__)
+    # Cache de assets estáticos para reducir carga inicial y solicitudes repetidas
+    try:
+        app.server.config["SEND_FILE_MAX_AGE_DEFAULT"] = 3600  # 1 hora
+    except Exception:
+        pass
     # Tema de gráficos consistente
     try:
         px.defaults.template = "plotly_white"
@@ -74,6 +80,8 @@ def build_app(df: pd.DataFrame) -> Dash:
             build_platform_specific_layout(plataformas, fecha_min, fecha_max),
             # Almacenar datos
             dcc.Store(id="data-store", data=df.to_dict("records")),
+            # Store oculto para manejar apertura de URL al hacer clic en Top publicaciones
+            dcc.Store(id="top-posts-open-url"),
         ],
         className="dashboard",
     )
@@ -118,6 +126,7 @@ def build_app(df: pd.DataFrame) -> Dash:
         Output("top-authors-likes-by-platform", "figure"),
         Output("top-authors-comments-by-platform", "figure"),
         Output("engagement-trend-by-platform", "figure"),
+        Output("top-posts-engagement-by-platform", "figure"),
         Input("platform-select", "value"),
         Input("platform-date-range", "start_date"),
         Input("platform-date-range", "end_date"),
@@ -144,7 +153,27 @@ def build_app(df: pd.DataFrame) -> Dash:
             top_authors_likes_figure(dff, selected_platform),
             top_authors_comments_figure(dff, selected_platform),
             engagement_trend_figure(dff, selected_platform),
+            top_posts_engagement_figure(dff, selected_platform),
         )
+
+    # Clientside callback: abrir URL en nueva pestaña al hacer clic en una barra del Top publicaciones
+    app.clientside_callback(
+        r"""
+        function(clickData) {
+            if (!clickData || !clickData.points || !clickData.points.length) {
+                return window.dash_clientside.no_update;
+            }
+            var y = clickData.points[0].y;
+            if (typeof y === 'string' && /^https?:\/\//.test(y)) {
+                try { window.open(y, '_blank', 'noopener,noreferrer'); } catch (e) {}
+                return y; // guardamos última URL clicada en el Store (opcional)
+            }
+            return window.dash_clientside.no_update;
+        }
+        """,
+        Output("top-posts-open-url", "data"),
+        Input("top-posts-engagement-by-platform", "clickData"),
+    )
 
     return app
 
@@ -159,6 +188,18 @@ def main():
         choices=["waitress", "dev"],
         default="waitress",
         help="Servidor WSGI: 'waitress' (prod-like) o 'dev' (Flask).",
+    )
+    parser.add_argument(
+        "--threads",
+        type=int,
+        default=8,
+        help="Número de threads para Waitress (mayor reduce cola de tareas)",
+    )
+    parser.add_argument(
+        "--backlog",
+        type=int,
+        default=64,
+        help="Backlog del socket para Waitress (cola de conexiones pendientes)",
     )
     parser.add_argument(
         "--quiet",
@@ -193,7 +234,14 @@ def main():
                 lg.disabled = True
         from waitress import serve
 
-        serve(app.server, host=args.host, port=args.port)
+        logging.getLogger(__name__).info(
+            "Iniciando Waitress threads=%s backlog=%s host=%s port=%s",
+            args.threads,
+            args.backlog,
+            args.host,
+            args.port,
+        )
+        serve(app.server, host=args.host, port=args.port, threads=args.threads, backlog=args.backlog)
     else:
         # Flask dev server: ocultar banner y logs de werkzeug si quiet
         flask_cli.show_server_banner = lambda *args, **kwargs: None
