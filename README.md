@@ -175,6 +175,24 @@ telelinker fetch --groups-file my_groups.json --limit 200 --format csv --out com
 # Select multiple groups interactively
 telelinker fetch --interactive
 ```
+#### 4. Visualize reports (Dashboard)
+
+Once you have a CSV with posts (e.g., from `fetch`), you can open an interactive dashboard to explore metrics:
+
+```powershell
+# Open dashboard using the CSV file
+telelinker report --file posts.csv
+
+# Short alias for --file
+telelinker report -f posts.csv
+```
+
+This launches a Plotly Dash app at `http://127.0.0.1:8501/` with:
+- General charts (URL count, total likes, total comments, time trend)
+- Per-platform charts (top authors, engagement trends, top posts)
+- Date filters to focus on specific periods
+
+Expected CSV columns include at least: `plataforma`, `url`, and interaction counts (e.g., `likes`, `comentarios`). If available, `fecha_publicacion` is used to power date filters and time series.
 
 ### Available parameters
 

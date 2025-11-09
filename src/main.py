@@ -37,7 +37,8 @@ def main():
 
     # Add 'report' subcommand
     report_parser = subparsers.add_parser("report", help="Generate reports from scraped data")
-    report_parser.add_argument("--file", required=True, help="Path to the CSV file to process")
+    report_parser.add_argument("-f", "--file", required=True, help="Path to the CSV file to process")
+    report_parser.add_argument("-p", "--port", type=int, default=8501, help="Port to serve the dashboard")
 
     args = parser.parse_args()
 

@@ -1,10 +1,10 @@
 {
-    "version": "1.8.5",
+    "version": "1.8.7",
     "description": "Telelinker CLI tool",
     "homepage": "https://github.com/nkmelndz/telelinker",
     "license": "MIT",
-    "url": "https://github.com/nkmelndz/telelinker/releases/download/v1.8.5/telelinker.exe",
-    "hash": "63F6AC7D58857E98D12BF7679D6F73405E78364F3D98C477E1FB13C299C919BC",
+    "url": "https://github.com/nkmelndz/telelinker/releases/download/v1.8.7/telelinker.exe",
+    "hash": "6F4D29CE0F0E8B0F08D3C0D79EA473BE8949C4E78B7313271DA11691013A33D4",
     "depends": ["googlechrome"],
     "bin": "telelinker.exe"
 }

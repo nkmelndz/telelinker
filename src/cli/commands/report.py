@@ -1,5 +1,8 @@
 import os
+import pandas as pd
 from rich.console import Console
+from waitress import serve
+from src.dashboards import report_dashboard
 
 
 def run(args):
@@ -17,14 +20,21 @@ def run(args):
         console.print(f"[bold red]Error:[/bold red] File '[yellow]{file_path}[/yellow]' does not exist.")
         return
 
-    # Lanzar el dashboard de Dash como módulo de Python
-    # Usamos puerto 8501 para mantener consistencia con el uso previo
-    cmd = f"python -m src.dashboards.report_dashboard --file \"{file_path}\" --host 127.0.0.1 --port 8501"
+    # Integrar el dashboard en el mismo proceso (sin invocar 'python -m')
+    # Esto asegura que PyInstaller incluya las dependencias (Flask/Dash/Waitress)
+    try:
+        df = pd.read_csv(file_path)
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] Could not read CSV file: [yellow]{e}[/yellow]")
+        return
 
-    console.print("[bold cyan]Opening dashboard (Dash)[/bold cyan] at [bright_cyan]http://127.0.0.1:8501/[/bright_cyan] …")
+    app = report_dashboard.build_app(df)
+
+    port = getattr(args, "port", 8501)
+    console.print(f"[bold cyan]Opening dashboard (Dash)[/bold cyan] at [bright_cyan]http://127.0.0.1:{port}/[/bright_cyan] …")
     console.print("[dim]Press [bold]Ctrl+C[/bold] to exit.[/dim]")
 
     try:
-        os.system(cmd)
+        serve(app.server, host="127.0.0.1", port=port, threads=8, backlog=64)
     except KeyboardInterrupt:
         console.print("\n[bold yellow]Server stopped[/bold yellow]. Goodbye! ✨")
