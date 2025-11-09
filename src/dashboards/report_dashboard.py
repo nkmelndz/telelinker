@@ -5,7 +5,6 @@ import pandas as pd
 from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
 
-from .components.filters import build_date_filter
 from .components.general import (
     build_general_layout,
     likes_sum_figure,
@@ -65,16 +64,8 @@ def build_app(df: pd.DataFrame) -> Dash:
     app.layout = html.Div(
         [
             html.H2("Telelinker Report (Dash)"),
-            # Sector general con filtro de fechas embebido bajo el subtítulo
-            build_general_layout(
-                html.Div(
-                    [
-                        html.Label("Filtro por fechas"),
-                        build_date_filter(fecha_min, fecha_max),
-                    ],
-                    className="filter-bar",
-                )
-            ),
+            # Sector general con filtro de fechas embebido (construido internamente)
+            build_general_layout(fecha_min, fecha_max),
             html.Hr(),
             # Sector por plataforma
             build_platform_specific_layout(plataformas, fecha_min, fecha_max),

@@ -1,19 +1,23 @@
 import pandas as pd
 from dash import html, dcc
 import plotly.express as px
+from datetime import date
+from .filters import build_date_filter
 
 
-def build_general_layout(date_filter: html.Div | None = None) -> html.Div:
-    """Contenedor de gráficos generales: likes, comentarios y recuento de URLs por plataforma.
-    Si se provee ``date_filter``, se inserta debajo del subtítulo.
+def build_general_layout(min_date: date | None = None, max_date: date | None = None) -> html.Div:
+    """Contenedor de gráficos generales: título, filtro de fechas y cuatro gráficos.
+    El DatePickerRange se construye internamente (id='date-range') como en la sección por plataforma.
     """
     return html.Div(
         [
             html.H3("Gráficos generales"),
-            *(
-                [date_filter]
-                if date_filter is not None
-                else []
+            html.Div(
+                [
+                    html.Label("Filtro por fechas"),
+                    build_date_filter(min_date, max_date),
+                ],
+                className="filter-bar",
             ),
             html.Div(
                 [
